@@ -1,21 +1,35 @@
 // =============================================
-// FUNCIONES DEL SISTEMA DE EVALUACIÓN LOPDP
-// PROYECTO DE TITULACIÓN - ISMAC
+// FUNCIONES MEJORADAS CON ANIMACIONES Y PDF
+// SISTEMA DE EVALUACIÓN LOPDP
 // =============================================
 
-// ========== NAVEGACIÓN POR TABS ==========
+// Navegación por tabs con animación
 function mostrarTab(tabId) {
     document.querySelectorAll('.tab-contenido').forEach(el => {
-        el.classList.remove('activo');
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px)';
+        setTimeout(() => {
+            el.classList.remove('activo');
+        }, 200);
     });
+    
     document.querySelectorAll('.tab').forEach(el => {
         el.classList.remove('activo');
     });
-    document.getElementById(tabId).classList.add('activo');
+    
+    setTimeout(() => {
+        const contenido = document.getElementById(tabId);
+        contenido.classList.add('activo');
+        setTimeout(() => {
+            contenido.style.opacity = '1';
+            contenido.style.transform = 'translateY(0)';
+        }, 50);
+    }, 200);
+    
     document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('activo');
 }
 
-// ========== CÁLCULO DE PORCENTAJES ==========
+// Calcular porcentaje de una categoría
 function calcularCategoria(categoriaId) {
     const preguntas = document.querySelectorAll(`#categoria-${categoriaId} .pregunta-item`);
     let totalPeso = 0;
@@ -37,15 +51,15 @@ function calcularCategoria(categoriaId) {
     return totalPeso > 0 ? Math.round((cumplido / totalPeso) * 100) : 0;
 }
 
-// ========== ACTUALIZAR DASHBOARD ==========
+// Actualizar dashboard en tiempo real con animación
 function actualizarDashboard() {
     const cat1 = calcularCategoria(1);
     const cat2 = calcularCategoria(2);
     const cat3 = calcularCategoria(3);
     
-    document.getElementById('porcentaje-cat1').textContent = cat1 + '%';
-    document.getElementById('porcentaje-cat2').textContent = cat2 + '%';
-    document.getElementById('porcentaje-cat3').textContent = cat3 + '%';
+    animarNumero('porcentaje-cat1', cat1);
+    animarNumero('porcentaje-cat2', cat2);
+    animarNumero('porcentaje-cat3', cat3);
     
     document.getElementById('barra-cat1').style.width = cat1 + '%';
     document.getElementById('barra-cat2').style.width = cat2 + '%';
@@ -56,18 +70,48 @@ function actualizarDashboard() {
     actualizarColor('cat3', cat3);
 }
 
+// Animar números (contador)
+function animarNumero(elementId, valorFinal) {
+    const elemento = document.getElementById(elementId);
+    const valorInicial = parseInt(elemento.textContent) || 0;
+    const duracion = 800;
+    const inicio = performance.now();
+    
+    function actualizar(tiempoActual) {
+        const progreso = Math.min((tiempoActual - inicio) / duracion, 1);
+        const valorActual = Math.round(valorInicial + (valorFinal - valorInicial) * progreso);
+        elemento.textContent = valorActual + '%';
+        
+        if (progreso < 1) {
+            requestAnimationFrame(actualizar);
+        } else {
+            elemento.textContent = valorFinal + '%';
+        }
+    }
+    
+    requestAnimationFrame(actualizar);
+}
+
 function actualizarColor(categoria, valor) {
     const elemento = document.getElementById(`porcentaje-${categoria}`);
+    const card = elemento.closest('.dashboard-card');
+    const barra = card.querySelector('.barra-progreso');
+    
+    barra.classList.remove('barra-verde', 'barra-amarillo', 'barra-rojo');
+    
     if (valor >= 80) {
         elemento.className = 'numero color-verde';
+        barra.classList.add('barra-verde');
     } else if (valor >= 50) {
         elemento.className = 'numero color-amarillo';
+        barra.classList.add('barra-amarillo');
     } else {
         elemento.className = 'numero color-rojo';
+        barra.classList.add('barra-rojo');
     }
 }
 
-// ========== GENERAR HALLAZGOS ==========
+// Generar hallazgos automáticamente
 function generarHallazgos() {
     const hallazgos = [];
     const categorias = [1, 2, 3];
@@ -102,8 +146,12 @@ function generarHallazgos() {
     
     if (hallazgos.length === 0) {
         container.innerHTML = `
-            <div style="background:#e8f5e9;padding:20px;border-radius:8px;border-left:4px solid #2e7d32;">
-                ✅ No se encontraron hallazgos significativos. Todos los requisitos cumplen totalmente.
+            <div style="background:#ECFDF5;padding:20px;border-radius:12px;border-left:4px solid #10B981;display:flex;align-items:center;gap:12px;">
+                <span style="font-size:2rem;">✅</span>
+                <div>
+                    <strong style="color:#065F46;">¡Excelente!</strong>
+                    <p style="color:#065F46;margin:0;">No se encontraron hallazgos significativos. Todos los requisitos cumplen totalmente.</p>
+                </div>
             </div>
         `;
         return;
@@ -113,17 +161,19 @@ function generarHallazgos() {
         const div = document.createElement('div');
         div.className = 'hallazgo-item';
         div.innerHTML = `
-            <div class="hallazgo-categoria">${h.nombreCategoria} - Pregunta ${h.pregunta}</div>
+            <div class="hallazgo-categoria">📌 ${h.nombreCategoria} - Pregunta ${h.pregunta}</div>
             <p><strong>${h.texto}</strong></p>
             <p>Estado: <span class="${h.estado === 'Cumple parcialmente' ? 'estado-parcial' : 'estado-no-cumple'}">${h.estado}</span></p>
-            <p>Evidencia / Observación: ${h.observacion || 'No se registró evidencia'}</p>
+            <p style="color:#666;font-size:0.9rem;">📝 Evidencia: ${h.observacion || 'No se registró evidencia'}</p>
             <input type="hidden" name="hallazgo_${i}" value="${h.texto}|${h.estado}|${h.observacion}">
         `;
         container.appendChild(div);
     });
 }
 
-// ========== GENERAR REPORTE PDF ==========
+// =============================================
+// GENERAR PDF CORREGIDO (CON DOM PDF MEJORADO)
+// =============================================
 function generarReporte() {
     const datos = {
         institucion: document.getElementById('nombre_institucion').value,
@@ -134,13 +184,21 @@ function generarReporte() {
         cat1: document.getElementById('porcentaje-cat1').textContent,
         cat2: document.getElementById('porcentaje-cat2').textContent,
         cat3: document.getElementById('porcentaje-cat3').textContent,
-        conclusiones: document.getElementById('conclusiones').value,
-        recomendaciones: document.getElementById('recomendaciones').value
+        conclusiones: document.getElementById('conclusiones').value || 'No se registraron conclusiones',
+        recomendaciones: document.getElementById('recomendaciones').value || 'No se registraron recomendaciones'
     };
     
+    // Obtener hallazgos
     const hallazgosItems = document.querySelectorAll('#hallazgos-container .hallazgo-item');
     datos.hallazgos = Array.from(hallazgosItems).map(el => el.textContent.trim());
     
+    // Mostrar loading
+    const btn = document.querySelector('[onclick="generarReporte()"]');
+    const textoOriginal = btn.textContent;
+    btn.textContent = '⏳ Generando PDF...';
+    btn.disabled = true;
+    
+    // Enviar al servidor para generar PDF
     fetch('generar_reporte.php', {
         method: 'POST',
         headers: {
@@ -148,7 +206,12 @@ function generarReporte() {
         },
         body: JSON.stringify(datos)
     })
-    .then(response => response.blob())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en el servidor');
+        }
+        return response.blob();
+    })
     .then(blob => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -157,14 +220,22 @@ function generarReporte() {
         document.body.appendChild(a);
         a.click();
         a.remove();
+        window.URL.revokeObjectURL(url);
+        
+        btn.textContent = textoOriginal;
+        btn.disabled = false;
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al generar el reporte PDF');
+        alert('❌ Error al generar el PDF. Verifica que el servidor esté funcionando.');
+        btn.textContent = textoOriginal;
+        btn.disabled = false;
     });
 }
 
-// ========== INICIALIZAR ==========
+// =============================================
+// INICIALIZAR
+// =============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.input-porcentaje, .select-estado, .input-observacion').forEach(el => {
         el.addEventListener('change', actualizarDashboard);
@@ -184,10 +255,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    actualizarDashboard();
+    setTimeout(actualizarDashboard, 300);
 });
 
-// ========== EXPORTAR FUNCIONES ==========
+// Exportar funciones
 window.mostrarTab = mostrarTab;
 window.actualizarDashboard = actualizarDashboard;
 window.generarHallazgos = generarHallazgos;
