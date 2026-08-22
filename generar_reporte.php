@@ -152,4 +152,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         3 => ['nombre' => 'Actores del Sistema', 'porcentaje' => $data['cat3'] ?? '0%']
     ];
     
-    foreach ($c
+    foreach ($categorias as $cat) {
+        $porc = intval($cat['porcentaje']);
+        $color = $porc >= 80 ? 'verde' : ($porc >= 50 ? 'amarillo' : 'rojo');
+        $html .= '
+        <div class="card-resultado">
+            <strong>' . $cat['nombre'] . '</strong>
+            <div class="numero ' . $color . '">' . $cat['porcentaje'] . '</div>
+        </div>';
+    }
+    
+    $html .= '
+        </div>';
+    
+    if (!empty($data['hallazgos']) && is_array($data['hallazgos'])) {
+        $html .= '<h2>3. HALLAZGOS IDENTIFICADOS</h2>';
+        foreach ($data['hallazgos'] as $hallazgo) {
+            if (!empty($hallazgo)) {
+                $html .= '<div class="hallazgo">• ' . htmlspecialchars($hallazgo) . '</div>';
+            }
+        }
+    }
+    
+    if (!empty($data['conclusiones'])) {
+        $html .= '
+        <h2>4. CONCLUSIONES</h2>
+        <div class="conclusiones">
+            <p>' . nl2br(htmlspecialchars($data['conclusiones'])) . '</p>
+        </div>';
+    }
+    
+    if (!empty($data['recomendaciones'])) {
+        $html .= '
+        <h2>5. RECOMENDACIONES</h2>
+        <div class="recomendaciones">
+            <p>' . nl2br(htmlspecialchars($data['recomendaciones'])) . '</p>
+        </div>';
+    }
+    
+    $html .= '
+        <div class="footer">
+            <p>Documento generado por el Sistema de Evaluación LOPDP</p>
+            <p>Fecha: ' . date('d/m/Y H:i') . '</p>
+        </div>
+    </body>
+    </html>';
+    
+    echo $html;
+    exit;
+}
+?>
