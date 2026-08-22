@@ -1,9 +1,8 @@
 // =============================================
-// FUNCIONES MEJORADAS CON ANIMACIONES Y PDF
-// SISTEMA DE EVALUACIÓN LOPDP
+// FUNCIONES POWER BI - SISTEMA DE EVALUACIÓN LOPDP
 // =============================================
 
-// Navegación por tabs con animación
+// Navegación por tabs
 function mostrarTab(tabId) {
     document.querySelectorAll('.tab-contenido').forEach(el => {
         el.style.opacity = '0';
@@ -34,12 +33,14 @@ function calcularCategoria(categoriaId) {
     const preguntas = document.querySelectorAll(`#categoria-${categoriaId} .pregunta-item`);
     let totalPeso = 0;
     let cumplido = 0;
+    let totalPreguntas = 0;
     
     preguntas.forEach(pregunta => {
         const porcentaje = parseFloat(pregunta.querySelector('.input-porcentaje').value) || 0;
         const estado = pregunta.querySelector('.select-estado').value;
         
         totalPeso += porcentaje;
+        totalPreguntas++;
         
         if (estado === 'Cumple totalmente') {
             cumplido += porcentaje;
@@ -48,33 +49,45 @@ function calcularCategoria(categoriaId) {
         }
     });
     
-    return totalPeso > 0 ? Math.round((cumplido / totalPeso) * 100) : 0;
+    const porcentaje = totalPeso > 0 ? Math.round((cumplido / totalPeso) * 100) : 0;
+    return { porcentaje, totalPreguntas, totalPeso, cumplido };
 }
 
-// Actualizar dashboard en tiempo real con animación
+// Actualizar dashboard Power BI
 function actualizarDashboard() {
     const cat1 = calcularCategoria(1);
     const cat2 = calcularCategoria(2);
     const cat3 = calcularCategoria(3);
     
-    animarNumero('porcentaje-cat1', cat1);
-    animarNumero('porcentaje-cat2', cat2);
-    animarNumero('porcentaje-cat3', cat3);
+    // Actualizar números grandes
+    animarNumero('porcentaje-cat1', cat1.porcentaje);
+    animarNumero('porcentaje-cat2', cat2.porcentaje);
+    animarNumero('porcentaje-cat3', cat3.porcentaje);
     
-    document.getElementById('barra-cat1').style.width = cat1 + '%';
-    document.getElementById('barra-cat2').style.width = cat2 + '%';
-    document.getElementById('barra-cat3').style.width = cat3 + '%';
+    // Actualizar detalles
+    document.getElementById('total-preguntas').textContent = cat1.totalPreguntas + cat2.totalPreguntas + cat3.totalPreguntas;
+    document.getElementById('promedio-general').textContent = Math.round((cat1.porcentaje + cat2.porcentaje + cat3.porcentaje) / 3) + '%';
     
-    actualizarColor('cat1', cat1);
-    actualizarColor('cat2', cat2);
-    actualizarColor('cat3', cat3);
+    // Actualizar barras del dashboard
+    document.getElementById('barra-cat1').style.width = cat1.porcentaje + '%';
+    document.getElementById('barra-cat2').style.width = cat2.porcentaje + '%';
+    document.getElementById('barra-cat3').style.width = cat3.porcentaje + '%';
+    
+    // Actualizar colores
+    actualizarColor('cat1', cat1.porcentaje);
+    actualizarColor('cat2', cat2.porcentaje);
+    actualizarColor('cat3', cat3.porcentaje);
+    
+    // Actualizar detalles de métricas
+    actualizarMetricas(cat1, cat2, cat3);
 }
 
-// Animar números (contador)
+// Animar números
 function animarNumero(elementId, valorFinal) {
     const elemento = document.getElementById(elementId);
+    if (!elemento) return;
     const valorInicial = parseInt(elemento.textContent) || 0;
-    const duracion = 800;
+    const duracion = 1000;
     const inicio = performance.now();
     
     function actualizar(tiempoActual) {
@@ -94,24 +107,44 @@ function animarNumero(elementId, valorFinal) {
 
 function actualizarColor(categoria, valor) {
     const elemento = document.getElementById(`porcentaje-${categoria}`);
+    if (!elemento) return;
     const card = elemento.closest('.dashboard-card');
+    if (!card) return;
     const barra = card.querySelector('.barra-progreso');
+    if (!barra) return;
     
-    barra.classList.remove('barra-verde', 'barra-amarillo', 'barra-rojo');
+    barra.className = 'barra-progreso';
     
     if (valor >= 80) {
-        elemento.className = 'numero color-verde';
+        elemento.className = 'value color-verde';
         barra.classList.add('barra-verde');
     } else if (valor >= 50) {
-        elemento.className = 'numero color-amarillo';
+        elemento.className = 'value color-amarillo';
         barra.classList.add('barra-amarillo');
     } else {
-        elemento.className = 'numero color-rojo';
+        elemento.className = 'value color-rojo';
         barra.classList.add('barra-rojo');
     }
 }
 
-// Generar hallazgos automáticamente
+function actualizarMetricas(cat1, cat2, cat3) {
+    const estadoTotal = cat1.porcentaje + cat2.porcentaje + cat3.porcentaje;
+    const promedio = Math.round(estadoTotal / 3);
+    
+    document.getElementById('promedio-general').textContent = promedio + '%';
+    
+    // Actualizar color del promedio
+    const promedioEl = document.getElementById('promedio-general');
+    if (promedio >= 80) {
+        promedioEl.className = 'value color-verde';
+    } else if (promedio >= 50) {
+        promedioEl.className = 'value color-amarillo';
+    } else {
+        promedioEl.className = 'value color-rojo';
+    }
+}
+
+// Generar hallazgos
 function generarHallazgos() {
     const hallazgos = [];
     const categorias = [1, 2, 3];
@@ -142,6 +175,7 @@ function generarHallazgos() {
     });
     
     const container = document.getElementById('hallazgos-container');
+    if (!container) return;
     container.innerHTML = '';
     
     if (hallazgos.length === 0) {
@@ -157,7 +191,7 @@ function generarHallazgos() {
         return;
     }
     
-    hallazgos.forEach((h, i) => {
+    hallazgos.forEach((h) => {
         const div = document.createElement('div');
         div.className = 'hallazgo-item';
         div.innerHTML = `
@@ -165,53 +199,42 @@ function generarHallazgos() {
             <p><strong>${h.texto}</strong></p>
             <p>Estado: <span class="${h.estado === 'Cumple parcialmente' ? 'estado-parcial' : 'estado-no-cumple'}">${h.estado}</span></p>
             <p style="color:#666;font-size:0.9rem;">📝 Evidencia: ${h.observacion || 'No se registró evidencia'}</p>
-            <input type="hidden" name="hallazgo_${i}" value="${h.texto}|${h.estado}|${h.observacion}">
         `;
         container.appendChild(div);
     });
 }
 
-// =============================================
-// GENERAR PDF CORREGIDO (CON DOM PDF MEJORADO)
-// =============================================
+// Generar Reporte PDF
 function generarReporte() {
     const datos = {
-        institucion: document.getElementById('nombre_institucion').value,
-        ruc: document.getElementById('ruc').value || 'No registrado',
-        sistema: document.getElementById('nombre_sistema').value,
-        fecha: document.getElementById('fecha_evaluacion').value,
-        evaluador: document.getElementById('evaluador').value,
-        cat1: document.getElementById('porcentaje-cat1').textContent,
-        cat2: document.getElementById('porcentaje-cat2').textContent,
-        cat3: document.getElementById('porcentaje-cat3').textContent,
-        conclusiones: document.getElementById('conclusiones').value || 'No se registraron conclusiones',
-        recomendaciones: document.getElementById('recomendaciones').value || 'No se registraron recomendaciones'
+        institucion: document.getElementById('nombre_institucion')?.value || 'No registrado',
+        ruc: document.getElementById('ruc')?.value || 'No registrado',
+        sistema: document.getElementById('nombre_sistema')?.value || 'No registrado',
+        fecha: document.getElementById('fecha_evaluacion')?.value || new Date().toISOString().split('T')[0],
+        evaluador: document.getElementById('evaluador')?.value || 'No registrado',
+        cat1: document.getElementById('porcentaje-cat1')?.textContent || '0%',
+        cat2: document.getElementById('porcentaje-cat2')?.textContent || '0%',
+        cat3: document.getElementById('porcentaje-cat3')?.textContent || '0%',
+        conclusiones: document.getElementById('conclusiones')?.value || '',
+        recomendaciones: document.getElementById('recomendaciones')?.value || ''
     };
     
-    // Obtener hallazgos
     const hallazgosItems = document.querySelectorAll('#hallazgos-container .hallazgo-item');
     datos.hallazgos = Array.from(hallazgosItems).map(el => el.textContent.trim());
     
-    // Mostrar loading
     const btn = document.querySelector('[onclick="generarReporte()"]');
-    const textoOriginal = btn.textContent;
-    btn.textContent = '⏳ Generando PDF...';
-    btn.disabled = true;
+    if (btn) {
+        const textoOriginal = btn.textContent;
+        btn.textContent = '⏳ Generando...';
+        btn.disabled = true;
+    }
     
-    // Enviar al servidor para generar PDF
     fetch('generar_reporte.php', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos)
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Error en el servidor');
-        }
-        return response.blob();
-    })
+    .then(response => response.blob())
     .then(blob => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -222,20 +245,22 @@ function generarReporte() {
         a.remove();
         window.URL.revokeObjectURL(url);
         
-        btn.textContent = textoOriginal;
-        btn.disabled = false;
+        if (btn) {
+            btn.textContent = '📄 Generar Reporte';
+            btn.disabled = false;
+        }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('❌ Error al generar el PDF. Verifica que el servidor esté funcionando.');
-        btn.textContent = textoOriginal;
-        btn.disabled = false;
+        alert('❌ Error al generar el PDF');
+        if (btn) {
+            btn.textContent = '📄 Generar Reporte';
+            btn.disabled = false;
+        }
     });
 }
 
-// =============================================
-// INICIALIZAR
-// =============================================
+// Inicializar
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.input-porcentaje, .select-estado, .input-observacion').forEach(el => {
         el.addEventListener('change', actualizarDashboard);
@@ -243,13 +268,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.querySelectorAll('.pregunta-item').forEach((item) => {
-        const texto = item.querySelector('.pregunta-texto').textContent.trim();
+        const texto = item.querySelector('.pregunta-texto')?.textContent.trim() || '';
         const catContainer = item.closest('[id^="categoria-"]');
         if (catContainer) {
             const catId = catContainer.id.split('-')[1];
+            const index = Array.from(catContainer.querySelectorAll('.pregunta-item')).indexOf(item) + 1;
             const hidden = document.createElement('input');
             hidden.type = 'hidden';
-            hidden.name = `cat${catId}_texto_${Array.from(catContainer.querySelectorAll('.pregunta-item')).indexOf(item) + 1}`;
+            hidden.name = `cat${catId}_texto_${index}`;
             hidden.value = texto;
             item.appendChild(hidden);
         }
