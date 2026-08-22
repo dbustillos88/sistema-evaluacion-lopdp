@@ -347,89 +347,126 @@ session_start();
         </div>
 
         <!-- ========================================== -->
-        <!-- TAB 6: DASHBOARD PREMIUM -->
-        <!-- ========================================== -->
-        <div id="tab-dashboard" class="tab-contenido">
-            <div class="card">
-                <h2>
-                    <span class="card-icon">📊</span>
-                    Dashboard de Resultados
-                </h2>
-                <p style="color: var(--gray-500); margin-bottom: 24px;">
-                    El módulo final consolida los porcentajes obtenidos en las tres categorías. 
-                    Los resultados se visualizan mediante un dashboard con gráficos de barras y animaciones.
-                </p>
+<!-- TAB 6: DASHBOARD POWER BI -->
+<!-- ========================================== -->
+<div id="tab-dashboard" class="tab-contenido">
+    <div class="card">
+        <h2>
+            <span class="card-icon">📊</span>
+            Dashboard de Resultados - Power BI Style
+        </h2>
+        <p style="color: var(--gray-500); margin-bottom: 24px;">
+            Visualización profesional de los resultados de la evaluación. 
+            Los porcentajes se actualizan en tiempo real.
+        </p>
 
-                <div class="dashboard-grid">
-                    <!-- Categoría 1 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3>🏛️ Políticas Institucionales</h3>
-                            <div class="icon-circle azul">
-                                <i class="fas fa-building"></i>
-                            </div>
+        <!-- ========== TARJETAS KPI ========== -->
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="label">🏛️ Políticas Institucionales</div>
+                <div id="porcentaje-cat1" class="value color-verde">0%</div>
+                <div class="sub">Cumplimiento normativo</div>
+                <div class="barra-progreso barra-verde">
+                    <div id="barra-cat1" class="barra" style="width:0%;"></div>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="label">🔐 Sistema Biométrico</div>
+                <div id="porcentaje-cat2" class="value color-verde">0%</div>
+                <div class="sub">Ciberseguridad y gestión</div>
+                <div class="barra-progreso barra-verde">
+                    <div id="barra-cat2" class="barra" style="width:0%;"></div>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="label">👥 Actores del Sistema</div>
+                <div id="porcentaje-cat3" class="value color-verde">0%</div>
+                <div class="sub">Capacitación y conocimiento</div>
+                <div class="barra-progreso barra-verde">
+                    <div id="barra-cat3" class="barra" style="width:0%;"></div>
+                </div>
+            </div>
+            
+            <div class="dashboard-card" style="background: linear-gradient(135deg, #4F46E5, #818CF8); color: white; border: none;">
+                <div class="label" style="color: rgba(255,255,255,0.7);">📈 Promedio General</div>
+                <div id="promedio-general" class="value" style="color: white;">0%</div>
+                <div class="sub" style="color: rgba(255,255,255,0.6);">Total de preguntas: <span id="total-preguntas">0</span></div>
+                <div style="position: absolute; right: 20px; bottom: 20px; font-size: 3rem; opacity: 0.15;">📊</div>
+            </div>
+        </div>
+
+        <!-- ========== GRÁFICOS DETALLADOS ========== -->
+        <div class="chart-container">
+            <div class="chart-box">
+                <h3>📊 Nivel de Cumplimiento por Categoría</h3>
+                <div class="bar-chart">
+                    <div class="bar-item bar-primary">
+                        <span class="bar-label">🏛️ Políticas Institucionales</span>
+                        <div class="bar-track">
+                            <div id="barra-detalle-cat1" class="bar-fill" style="width:0%;">0%</div>
                         </div>
-                        <div id="porcentaje-cat1" class="numero color-verde">0%</div>
-                        <p class="etiqueta">Cumplimiento normativo institucional</p>
-                        <div class="barra-progreso barra-verde">
-                            <div id="barra-cat1" class="barra" style="width:0%;"></div>
-                        </div>
+                        <span class="bar-percent" id="detalle-porcentaje-cat1">0%</span>
                     </div>
-
-                    <!-- Categoría 2 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3>🔐 Sistema Biométrico</h3>
-                            <div class="icon-circle verde">
-                                <i class="fas fa-fingerprint"></i>
-                            </div>
+                    <div class="bar-item bar-success">
+                        <span class="bar-label">🔐 Sistema Biométrico</span>
+                        <div class="bar-track">
+                            <div id="barra-detalle-cat2" class="bar-fill" style="width:0%;">0%</div>
                         </div>
-                        <div id="porcentaje-cat2" class="numero color-verde">0%</div>
-                        <p class="etiqueta">Ciberseguridad y gestión de datos</p>
-                        <div class="barra-progreso barra-verde">
-                            <div id="barra-cat2" class="barra" style="width:0%;"></div>
-                        </div>
+                        <span class="bar-percent" id="detalle-porcentaje-cat2">0%</span>
                     </div>
-
-                    <!-- Categoría 3 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3>👥 Actores del Sistema</h3>
-                            <div class="icon-circle naranja">
-                                <i class="fas fa-users"></i>
-                            </div>
+                    <div class="bar-item bar-warning">
+                        <span class="bar-label">👥 Actores del Sistema</span>
+                        <div class="bar-track">
+                            <div id="barra-detalle-cat3" class="bar-fill" style="width:0%;">0%</div>
                         </div>
-                        <div id="porcentaje-cat3" class="numero color-verde">0%</div>
-                        <p class="etiqueta">Capacitación y conocimiento</p>
-                        <div class="barra-progreso barra-verde">
-                            <div id="barra-cat3" class="barra" style="width:0%;"></div>
-                        </div>
+                        <span class="bar-percent" id="detalle-porcentaje-cat3">0%</span>
                     </div>
                 </div>
-
-                <div style="text-align: center; margin: 20px 0; padding: 16px; background: var(--gray-50); border-radius: var(--radius-sm);">
-                    <p style="color: var(--gray-500); font-size: 0.9rem;">
-                        <i class="fas fa-sync-alt" style="margin-right: 8px;"></i>
-                        Los porcentajes se calculan automáticamente en base a la ponderación y estado de cada pregunta.
-                        <br>
-                        <span style="font-size: 0.8rem; color: var(--gray-400);">
-                            ✅ Cumple totalmente (100%) | ⚠️ Cumple parcialmente (50%) | ❌ No cumple (0%)
-                        </span>
-                    </p>
-                </div>
-
-                <div class="btn-grupo" style="justify-content: space-between;">
-                    <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-recomendaciones')">← Recomendaciones</button>
-                    <button type="submit" class="btn btn-exito" onclick="return confirm('¿Está seguro de guardar la evaluación?')">
-                        💾 Guardar Evaluación
-                    </button>
-                    <button type="button" class="btn btn-primario" onclick="generarReporte()">
-                        📄 Generar Reporte
-                    </button>
+            </div>
+            
+            <div class="chart-box">
+                <h3>📋 Resumen de Métricas</h3>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-dot" style="background: #4F46E5;"></div>
+                        <span class="metric-text">Cumple totalmente</span>
+                        <span class="metric-count" id="totales-cumple">0</span>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-dot" style="background: #F59E0B;"></div>
+                        <span class="metric-text">Cumple parcialmente</span>
+                        <span class="metric-count" id="totales-parcial">0</span>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-dot" style="background: #EF4444;"></div>
+                        <span class="metric-text">No cumple</span>
+                        <span class="metric-count" id="totales-no-cumple">0</span>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-dot" style="background: #94A3B8;"></div>
+                        <span class="metric-text">No aplica</span>
+                        <span class="metric-count" id="totales-no-aplica">0</span>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- ========== BOTONES ========== -->
+        <div class="btn-group" style="justify-content: space-between; margin-top: 24px;">
+            <button type="button" class="btn btn-warning" onclick="mostrarTab('tab-recomendaciones')">← Recomendaciones</button>
+            <div style="display: flex; gap: 12px;">
+                <button type="submit" class="btn btn-success" onclick="return confirm('¿Está seguro de guardar la evaluación?')">
+                    💾 Guardar Evaluación
+                </button>
+                <button type="button" class="btn btn-primary" onclick="generarReporte()">
+                    📄 Generar Reporte
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
     </form>
 </div>
 
