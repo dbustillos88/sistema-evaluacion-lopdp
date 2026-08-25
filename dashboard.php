@@ -124,10 +124,9 @@ $porcentajes = calcularPorcentajes($evaluacion_id);
 
 <script>
 // =============================================
-// GENERAR PDF CON LOS DATOS DEL DASHBOARD
+// GENERAR PDF DESDE DASHBOARD
 // =============================================
 function generarPDFDesdeDashboard(evaluacionId) {
-    // Mostrar loading
     const btn = document.querySelector('.btn-exito');
     const textoOriginal = btn.textContent;
     btn.textContent = '⏳ Generando PDF...';
@@ -162,7 +161,7 @@ function generarPDFDesdeDashboard(evaluacionId) {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Error en el servidor');
+            throw new Error('Error en el servidor: ' + response.status);
         }
         return response.blob();
     })
@@ -181,7 +180,7 @@ function generarPDFDesdeDashboard(evaluacionId) {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('❌ Error al generar el PDF');
+        alert('❌ Error al generar el PDF: ' + error.message);
         btn.textContent = textoOriginal;
         btn.disabled = false;
     });
