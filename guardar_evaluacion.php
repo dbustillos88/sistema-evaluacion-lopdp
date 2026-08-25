@@ -63,27 +63,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Categoría 3 (8 preguntas)
-    for ($i = 1; $i <= 8; $i++) {
-        $data['respuestas'][] = [
+    // =============================================
+// CATEGORÍA 3 (SOLO 3 PREGUNTAS)
+// =============================================
+for ($i = 1; $i <= 3; $i++) {
+    $data['respuestas'][] = [
+        'categoria' => 3,
+        'pregunta_id' => $i,
+        'pregunta_texto' => $_POST["cat3_texto_$i"] ?? "Pregunta $i",
+        'porcentaje' => $_POST["cat3_peso_$i"] ?? 0,
+        'estado' => $_POST["cat3_estado_$i"] ?? 'pendiente',
+        'observacion' => $_POST["cat3_observacion_$i"] ?? '',
+        'evidencia' => $_POST["cat3_observacion_$i"] ?? ''
+    ];
+    
+    $estado = $_POST["cat3_estado_$i"] ?? '';
+    if ($estado == 'No cumple' || $estado == 'Cumple parcialmente') {
+        $data['hallazgos'][] = [
             'categoria' => 3,
             'pregunta_id' => $i,
-            'pregunta_texto' => $_POST["cat3_texto_$i"] ?? "Pregunta $i",
-            'porcentaje' => $_POST["cat3_peso_$i"] ?? 0,
-            'estado' => $_POST["cat3_estado_$i"] ?? 'pendiente',
-            'observacion' => $_POST["cat3_observacion_$i"] ?? '',
-            'evidencia' => $_POST["cat3_observacion_$i"] ?? ''
+            'descripcion' => "Categoría 3 - Pregunta $i: " . ($_POST["cat3_texto_$i"] ?? '') . " - Estado: $estado"
         ];
-        
-        $estado = $_POST["cat3_estado_$i"] ?? '';
-        if ($estado == 'No cumple' || $estado == 'Cumple parcialmente') {
-            $data['hallazgos'][] = [
-                'categoria' => 3,
-                'pregunta_id' => $i,
-                'descripcion' => "Categoría 3 - Pregunta $i: " . ($_POST["cat3_texto_$i"] ?? '') . " - Estado: $estado"
-            ];
-        }
     }
+}
 
     $evaluacion_id = guardarEvaluacion($data);
     

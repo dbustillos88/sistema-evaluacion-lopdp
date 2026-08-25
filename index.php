@@ -222,58 +222,52 @@ session_start();
                     <?php endforeach; ?>
                 </div>
 
-                <!-- ===== CATEGORÍA 3 ===== -->
-                <h3 style="color: var(--gray-700); margin: 30px 0 20px 0; display:flex; align-items:center; gap:12px; padding:16px 20px; background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 12px;">
-                    <span style="font-size:1.5rem;">👥</span> 
-                    <span style="font-weight:700; color: #B45309;">Categoría 3.</span> 
-                    <span>Actores que forman parte del sistema (consumidores y operarios)</span>
-                </h3>
-                <div id="categoria-3">
-                    <?php
-                    // PREGUNTAS ACTUALIZADAS - CATEGORÍA 3 (8 preguntas)
-                    $preguntas_cat3 = [
-                        "¿Se ha realizado una Evaluación de Impacto en la Protección de Datos (EIPD) antes de implementar tecnologías de control de acceso biométrico?",
-                        "¿La comunidad institucional recibe capacitaciones periódicas acerca de la normativa y las políticas de seguridad y protección de datos personales?",
-                        "¿Los docentes que utilizan el sistema de acceso biométrico han recibido capacitación sobre las políticas institucionales de seguridad y protección de datos personales?",
-                        "¿Los estudiantes usuarios del sistema conocen la finalidad para la cual se recopilan sus datos biométricos y los mecanismos disponibles para ejercer sus derechos?",
-                        "¿Los operarios y desarrolladores del sistema biométrico han sido capacitados en el tratamiento de datos personales sensibles y en los procedimientos institucionales aplicables?",
-                        "¿Existe evidencia de las capacitaciones realizadas, como registros de asistencia, material impartido o constancias de participación?",
-                        "¿El personal autorizado conoce el procedimiento que debe seguir ante un incidente de seguridad o acceso no autorizado a datos personales?",
-                        "¿Las capacitaciones sobre protección de datos y seguridad de la información se actualizan cuando cambian los procedimientos, sistemas o normativa aplicable?"
-                    ];
-                    
-                    foreach ($preguntas_cat3 as $index => $texto):
-                        $pregunta_id = $index + 1;
-                    ?>
-                    <div class="pregunta-item">
-                        <div class="pregunta-texto"><?php echo $pregunta_id; ?>. <?php echo $texto; ?></div>
-                        <div class="pregunta-controles">
-                            <div>
-                                <label>Ponderación (%)</label>
-                                <input type="number" class="input-porcentaje" 
-                                       name="cat3_peso_<?php echo $pregunta_id; ?>" 
-                                       value="12" min="0" max="100" step="0.5">
-                            </div>
-                            <div>
-                                <label>Estado de Cumplimiento</label>
-                                <select class="select-estado" name="cat3_estado_<?php echo $pregunta_id; ?>">
-                                    <option value="Cumple totalmente">Cumple totalmente</option>
-                                    <option value="Cumple parcialmente" selected>Cumple parcialmente</option>
-                                    <option value="No cumple">No cumple</option>
-                                    <option value="No aplica">No aplica</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>Evidencia / Observación</label>
-                                <input type="text" class="input-observacion" 
-                                       name="cat3_observacion_<?php echo $pregunta_id; ?>" 
-                                       placeholder="Registre la evidencia encontrada" style="width:100%;">
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-
+                <!-- ===== CATEGORÍA 3: ACTORES DEL SISTEMA (SOLO 3 PREGUNTAS) ===== -->
+<h3 style="color: var(--gray-700); margin: 30px 0 20px 0; display:flex; align-items:center; gap:12px; padding:16px 20px; background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 12px;">
+    <span style="font-size:1.5rem;">👥</span> 
+    <span style="font-weight:700; color: #B45309;">Categoría 3.</span> 
+    <span>Actores que forman parte del sistema (consumidores y operarios)</span>
+</h3>
+<div id="categoria-3">
+    <?php
+    // SOLO 3 PREGUNTAS - CATEGORÍA 3
+    $preguntas_cat3 = [
+        "¿Se ha realizado una Evaluación de Impacto en la Protección de Datos (EIPD) antes de implementar tecnologías de control de acceso biométrico?",
+        "¿La comunidad institucional recibe capacitaciones periódicas acerca de la normativa y las políticas de seguridad y protección de datos personales?",
+        "¿Los operarios y desarrolladores del sistema biométrico han sido capacitados en el tratamiento de datos personales sensibles y en los procedimientos institucionales aplicables?"
+    ];
+    
+    foreach ($preguntas_cat3 as $index => $texto):
+        $pregunta_id = $index + 1;
+    ?>
+    <div class="pregunta-item">
+        <div class="pregunta-texto"><?php echo $pregunta_id; ?>. <?php echo $texto; ?></div>
+        <div class="pregunta-controles">
+            <div>
+                <label>Ponderación (%)</label>
+                <input type="number" class="input-porcentaje" 
+                       name="cat3_peso_<?php echo $pregunta_id; ?>" 
+                       value="33" min="0" max="100" step="0.5">
+            </div>
+            <div>
+                <label>Estado de Cumplimiento</label>
+                <select class="select-estado" name="cat3_estado_<?php echo $pregunta_id; ?>">
+                    <option value="Cumple totalmente">Cumple totalmente</option>
+                    <option value="Cumple parcialmente" selected>Cumple parcialmente</option>
+                    <option value="No cumple">No cumple</option>
+                    <option value="No aplica">No aplica</option>
+                </select>
+            </div>
+            <div>
+                <label>Evidencia / Observación</label>
+                <input type="text" class="input-observacion" 
+                       name="cat3_observacion_<?php echo $pregunta_id; ?>" 
+                       placeholder="Registre la evidencia encontrada" style="width:100%;">
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
                 <div class="btn-grupo" style="justify-content: space-between;">
                     <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-general')">← Anterior</button>
                     <button type="button" class="btn btn-primario" onclick="generarHallazgos(); mostrarTab('tab-hallazgos');">Siguiente → Hallazgos</button>
