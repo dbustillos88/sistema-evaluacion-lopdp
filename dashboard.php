@@ -1,6 +1,6 @@
 <?php
 // =============================================
-// DASHBOARD DE RESULTADOS CON PDF REAL
+// DASHBOARD DE RESULTADOS
 // =============================================
 require_once 'config/conexion.php';
 
@@ -98,7 +98,7 @@ $porcentajes = calcularPorcentajes($evaluacion_id);
     <?php endif; ?>
 
     <!-- CONCLUSIONES -->
-    <?php if ($conclusiones): ?>
+    <?php if ($conclusiones && !empty($conclusiones['conclusiones'])): ?>
     <div class="card">
         <h2>📄 Conclusiones</h2>
         <p><?php echo nl2br(htmlspecialchars($conclusiones['conclusiones'])); ?></p>
@@ -106,14 +106,14 @@ $porcentajes = calcularPorcentajes($evaluacion_id);
     <?php endif; ?>
 
     <!-- RECOMENDACIONES -->
-    <?php if ($conclusiones && $conclusiones['recomendaciones']): ?>
+    <?php if ($conclusiones && !empty($conclusiones['recomendaciones'])): ?>
     <div class="card">
         <h2>💡 Recomendaciones</h2>
         <p><?php echo nl2br(htmlspecialchars($conclusiones['recomendaciones'])); ?></p>
     </div>
     <?php endif; ?>
 
-    <!-- BOTONES ACTUALIZADOS -->
+    <!-- BOTONES -->
     <div class="btn-grupo" style="margin-top:20px;">
         <a href="index.php" class="btn btn-primario">⬅ Nueva Evaluación</a>
         <button onclick="generarPDFDesdeDashboard(<?php echo $evaluacion_id; ?>)" class="btn btn-exito">
@@ -123,9 +123,6 @@ $porcentajes = calcularPorcentajes($evaluacion_id);
 </div>
 
 <script>
-// =============================================
-// GENERAR PDF DESDE DASHBOARD
-// =============================================
 function generarPDFDesdeDashboard(evaluacionId) {
     const btn = document.querySelector('.btn-exito');
     const textoOriginal = btn.textContent;
@@ -142,21 +139,25 @@ function generarPDFDesdeDashboard(evaluacionId) {
         evaluador: document.querySelector('.tabla-resultados tr:nth-child(5) td')?.textContent || 'No registrado',
         cat1: document.querySelector('.dashboard-card:nth-child(1) .numero')?.textContent || '0%',
         cat2: document.querySelector('.dashboard-card:nth-child(2) .numero')?.textContent || '0%',
-        cat3: document.querySelector('.dashboard-card:nth-child(3) .numero')?.textContent || '0%',
-        conclusiones: document.querySelector('.card:nth-child(5) p')?.textContent || 'No hay conclusiones',
-        recomendaciones: document.querySelector('.card:nth-child(6) p')?.textContent || 'No hay recomendaciones'
+        cat3: document.querySelector('.dashboard-card:nth-child(3) .numero')?.textContent || '0%'
     };
     
-    // Obtener hallazgos
+    // Obtener CONCLUSIONES (solo el texto de conclusiones, no las preguntas)
+    const conclusionesEl = document.querySelector('.card:nth-child(5) p');
+    datos.conclusiones = conclusionesEl ? conclusionesEl.textContent.trim() : '';
+    
+    // Obtener RECOMENDACIONES (solo el texto de recomendaciones, no las preguntas)
+    const recomendacionesEl = document.querySelector('.card:nth-child(6) p');
+    datos.recomendaciones = recomendacionesEl ? recomendacionesEl.textContent.trim() : '';
+    
+    // Obtener HALLAZGOS (solo el texto de hallazgos, no las preguntas)
     const hallazgosItems = document.querySelectorAll('.hallazgo-item p');
     datos.hallazgos = Array.from(hallazgosItems).map(el => el.textContent.trim());
     
     // Enviar al servidor
     fetch('generar_reporte_dashboard.php', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos)
     })
     .then(response => {
@@ -186,5 +187,6 @@ function generarPDFDesdeDashboard(evaluacionId) {
     });
 }
 </script>
+
 </body>
 </html>

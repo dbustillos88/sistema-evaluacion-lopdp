@@ -89,21 +89,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Porcentaje con color
         $pdf->SetFont('helvetica', 'B', 13);
         if ($porc >= 80) {
-            $pdf->SetTextColor(16, 185, 129); // Verde
+            $pdf->SetTextColor(16, 185, 129);
         } elseif ($porc >= 50) {
-            $pdf->SetTextColor(245, 158, 11); // Amarillo
+            $pdf->SetTextColor(245, 158, 11);
         } else {
-            $pdf->SetTextColor(239, 68, 68); // Rojo
+            $pdf->SetTextColor(239, 68, 68);
         }
         $pdf->Cell(30, 8, $porc . '%', 0, 0);
         $pdf->SetTextColor(0, 0, 0);
         
-        // Barra de progreso (dibujada con rectángulos)
+        // Barra de progreso
         $pdf->SetDrawColor(200, 200, 200);
         $pdf->SetFillColor(200, 200, 200);
         $pdf->Rect(120, $pdf->GetY() - 1, 60, 6, 'F');
         
-        // Barra de progreso llena
         if ($porc >= 80) {
             $pdf->SetFillColor(16, 185, 129);
         } elseif ($porc >= 50) {
@@ -138,9 +137,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pdf->Ln(5);
     
     // =============================================
-    // CONCLUSIONES
+    // CONCLUSIONES (SOLO TEXTO DE CONCLUSIONES)
     // =============================================
-    if (!empty($data['conclusiones']) && $data['conclusiones'] !== 'No hay conclusiones') {
+    if (!empty($data['conclusiones'])) {
         $pdf->SetFont('helvetica', 'B', 14);
         $pdf->Cell(0, 10, '4. CONCLUSIONES', 0, 1);
         $pdf->SetFont('helvetica', '', 11);
@@ -149,9 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // =============================================
-    // RECOMENDACIONES
+    // RECOMENDACIONES (SOLO TEXTO DE RECOMENDACIONES)
     // =============================================
-    if (!empty($data['recomendaciones']) && $data['recomendaciones'] !== 'No hay recomendaciones') {
+    if (!empty($data['recomendaciones'])) {
         $pdf->SetFont('helvetica', 'B', 14);
         $pdf->Cell(0, 10, '5. RECOMENDACIONES', 0, 1);
         $pdf->SetFont('helvetica', '', 11);
