@@ -192,25 +192,8 @@ try {
     );
     $pdf->SetTextColor(15, 23, 42);
 
-    // 3. Hallazgos
-    if ($hallazgos) {
-        asegurarEspacio($pdf, 20);
-        $pdf->Ln(5);
-        $pdf->SetFont('helvetica', 'B', 13);
-        $pdf->Cell(0, 8, '3. Hallazgos identificados', 0, 1);
-        foreach ($hallazgos as $h) {
-            asegurarEspacio($pdf, 16);
-            $esCritico = strpos((string) $h['descripcion'], 'No cumple') === 0;
-            $pdf->SetFillColor($esCritico ? 254 : 255, $esCritico ? 242 : 251, $esCritico ? 242 : 235);
-            $pdf->SetTextColor($esCritico ? 153 : 146, $esCritico ? 27 : 64, $esCritico ? 27 : 14);
-            $pdf->SetFont('helvetica', 'B', 8.5);
-            $pdf->Cell(0, 6, 'Categoría ' . (int) $h['categoria'] . ' · Pregunta ' . (int) $h['pregunta_id'], 0, 1, 'L', true);
-            $pdf->SetTextColor(51, 65, 85);
-            $pdf->SetFont('helvetica', '', 9);
-            $pdf->MultiCell(0, 5.5, limpiarPdf($h['descripcion']), 0, 'L', false, 1);
-            $pdf->Ln(2);
-        }
-    }
+ // 3. Conclusiones y recomendaciones
+$seccion = 3;
 
     // Conclusiones y recomendaciones
     $seccion = 4;
