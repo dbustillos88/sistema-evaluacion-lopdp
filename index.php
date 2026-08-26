@@ -1,11 +1,92 @@
 <?php
-// =============================================
-// SISTEMA DE EVALUACIÓN DE CUMPLIMIENTO LOPDP
-// PÁGINA PRINCIPAL - VERSIÓN MEJORADA
-// =============================================
 session_start();
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$categorias = [
+    1 => [
+        'titulo' => 'Políticas institucionales de seguridad y protección de datos personales',
+        'corto' => 'Políticas institucionales',
+        'preguntas' => [
+            '¿Cuenta la institución con políticas de seguridad de la información que cumplan con lo dispuesto en la Ley Orgánica de Protección de Datos Personales?',
+            '¿Tiene alguna estructura o designación formal el área de protección de datos personales, por ejemplo un Delegado u Oficial de Protección de Datos?',
+            '¿Existe consentimiento previo, explícito e informado de estudiantes y docentes antes de capturar datos sensibles, como los biométricos?',
+            '¿Se cuenta con cláusulas o avisos de privacidad visibles e informativos al momento de recolectar datos personales?',
+            '¿Existe un procedimiento para que estudiantes y personal ejerzan sus derechos ARCO y se gestione la retención de datos?',
+            '¿Están definidos canales oficiales, físicos o digitales, para atender solicitudes relacionadas con derechos ARCO?',
+            '¿Existen medidas técnicas de seguridad, como cifrado y control de acceso por roles, para proteger bases de datos con información biométrica y personal?'
+        ],
+        'pesos' => [14.29, 14.29, 14.29, 14.29, 14.29, 14.29, 14.26],
+    ],
+    2 => [
+        'titulo' => 'Sistema de acceso biométrico: ciberseguridad, flujo y gestión de la información',
+        'corto' => 'Sistema biométrico',
+        'preguntas' => [
+            '¿El sistema web instalado cuenta con mecanismos de seguridad acordes con el tratamiento de datos personales?',
+            '¿Los dispositivos de captura biométrica cuentan con cifrado para proteger la información de huellas y rostros?',
+            '¿Los dispositivos de captura biométrica están protegidos ante interrupciones eléctricas mediante UPS u otro mecanismo equivalente?',
+            '¿El sistema permite modos alternativos de acceso autorizados cuando falla la biometría?',
+            '¿El sistema convierte las características biométricas en representaciones matemáticas no reversibles?',
+            '¿Las imágenes biométricas originales son eliminadas después de generar el vector o plantilla de características?',
+            '¿La base de datos que almacena patrones biométricos utiliza algoritmos de cifrado robustos?',
+            '¿Las transmisiones entre dispositivos biométricos y servidor se realizan mediante canales cifrados?',
+            '¿Existe consentimiento previo, expreso e informado antes del registro biométrico de estudiantes y docentes?',
+            '¿Existe un mecanismo accesible para revocar el consentimiento u oponerse al uso de datos biométricos?',
+            '¿Existe una alternativa equivalente no biométrica para acceder a aulas o laboratorios?',
+            '¿El sistema registra trazabilidad de cada intento de acceso, incluyendo fecha, hora, usuario y resultado?',
+            '¿El acceso a la consola administrativa está restringido al personal técnico autorizado?',
+            '¿Existen procedimientos para depurar registros biométricos de estudiantes que se retiran o gradúan?',
+            '¿Existen respaldos periódicos y seguros de la base de datos del sistema biométrico?'
+        ],
+        'pesos' => [6.67, 6.67, 6.67, 6.67, 6.67, 6.67, 6.67, 6.67, 6.67, 6.67, 6.67, 6.67, 6.67, 6.67, 6.62],
+    ],
+    3 => [
+        'titulo' => 'Actores que forman parte del sistema: usuarios y operadores',
+        'corto' => 'Actores del sistema',
+        'preguntas' => [
+            '¿Se realizó una Evaluación de Impacto en la Protección de Datos antes de implementar el control de acceso biométrico?',
+            '¿La comunidad institucional recibe capacitaciones periódicas sobre normativa, seguridad y protección de datos personales?',
+            '¿Los operarios y desarrolladores del sistema biométrico fueron capacitados en el tratamiento de datos personales sensibles y en los procedimientos institucionales aplicables?'
+        ],
+        'pesos' => [33.33, 33.33, 33.34],
+    ],
+];
+
+function renderCategoria(int $id, array $categoria): void
+{
+    foreach ($categoria['preguntas'] as $index => $texto) {
+        $preguntaId = $index + 1;
+        $peso = $categoria['pesos'][$index];
+        ?>
+        <article class="pregunta-item">
+            <div class="pregunta-numero"><?php echo $preguntaId; ?></div>
+            <div class="pregunta-cuerpo">
+                <div class="pregunta-texto"><?php echo htmlspecialchars($texto, ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="pregunta-controles">
+                    <div>
+                        <label>Ponderación (%)</label>
+                        <input type="number" class="input-porcentaje" name="cat<?php echo $id; ?>_peso_<?php echo $preguntaId; ?>" value="<?php echo number_format($peso, 2, '.', ''); ?>" min="0" max="100" step="0.01">
+                    </div>
+                    <div>
+                        <label>Estado de cumplimiento</label>
+                        <select class="select-estado" name="cat<?php echo $id; ?>_estado_<?php echo $preguntaId; ?>" required>
+                            <option value="" selected>Seleccione...</option>
+                            <option value="Cumple totalmente">Cumple totalmente</option>
+                            <option value="Cumple parcialmente">Cumple parcialmente</option>
+                            <option value="No cumple">No cumple</option>
+                            <option value="No aplica">No aplica</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Evidencia / observación</label>
+                        <input type="text" class="input-observacion" name="cat<?php echo $id; ?>_observacion_<?php echo $preguntaId; ?>" placeholder="Describa brevemente la evidencia revisada">
+                    </div>
+                </div>
+            </div>
+        </article>
+        <?php
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -17,17 +98,15 @@ if (empty($_SESSION['csrf_token'])) {
     <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
-<div class="container">
-    <!-- HEADER PREMIUM -->
-    <div class="header">
-        <div class="header-content">
-            <div>
-                <h1>Simulador de Cumplimiento LOPDP</h1>
-                <p class="subtitle">Sistema de control de acceso biométrico · Proyecto de titulación de Desarrollo de Software</p>
-            </div>
-            <div class="badge">Instituto Tecnológico Universitario ISMAC</div>
+<div class="app-shell">
+    <header class="hero-header">
+        <div>
+            <div class="eyebrow">Proyecto de titulación · Desarrollo de Software</div>
+            <h1>Simulador de Cumplimiento LOPDP</h1>
+            <p>Sistema de control de acceso biométrico</p>
         </div>
-    </div>
+        <div class="brand-box">Instituto Tecnológico Universitario ISMAC</div>
+    </header>
 
     <?php if (!empty($_SESSION['error_formulario'])): ?>
         <div class="mensaje-error">
@@ -35,477 +114,224 @@ if (empty($_SESSION['csrf_token'])) {
         </div>
     <?php endif; ?>
 
-    <!-- NAVEGACIÓN DEL SIMULADOR -->
-    <div class="tabs" role="tablist" aria-label="Secciones del simulador">
-        <button class="tab activo" data-tab="tab-general" onclick="mostrarTab('tab-general')" type="button">
-            <span class="tab-number">1</span> Información general
-        </button>
-        <button class="tab" data-tab="tab-evaluacion" onclick="mostrarTab('tab-evaluacion')" type="button">
-            <span class="tab-number">2</span> Simulador
-        </button>
-        <button class="tab" data-tab="tab-hallazgos" onclick="mostrarTab('tab-hallazgos')" type="button">
-            <span class="tab-number">3</span> Hallazgos
-        </button>
-        <button class="tab" data-tab="tab-conclusiones" onclick="mostrarTab('tab-conclusiones')" type="button">
-            <span class="tab-number">4</span> Conclusiones
-        </button>
-        <button class="tab" data-tab="tab-recomendaciones" onclick="mostrarTab('tab-recomendaciones')" type="button">
-            <span class="tab-number">5</span> Recomendaciones
-        </button>
-        <button class="tab" data-tab="tab-dashboard" onclick="mostrarTab('tab-dashboard')" type="button">
-            <span class="tab-number">6</span> Dashboard
-        </button>
-        <button class="tab" data-tab="tab-acerca" onclick="mostrarTab('tab-acerca')" type="button">
-            <span class="tab-number">7</span> Acerca del simulador
-        </button>
-    </div>
-
-    <form id="form-evaluacion" action="guardar_evaluacion.php" method="POST">
-        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
-        <!-- ========================================== -->
-        <!-- TAB 1: INFORMACIÓN GENERAL -->
-        <!-- ========================================== -->
-        <div id="tab-general" class="tab-contenido activo">
-            <div class="card">
-                <h2>
-                    Información general del simulador
-                </h2>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="nombre_institucion">Nombre de la institución *</label>
-                        <input type="text" id="nombre_institucion" name="nombre_institucion" 
-                               value="Instituto Tecnológico Universitario ISMAC" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="ruc">RUC / Identificación <span class="campo-opcional">(Opcional)</span></label>
-                        <input type="text" id="ruc" name="ruc" placeholder="Opcional - no obligatorio">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="nombre_sistema">Sistema analizado *</label>
-                        <input type="text" id="nombre_sistema" name="nombre_sistema" 
-                               value="Sistema Biométrico de Control de Acceso" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="fecha_evaluacion">Fecha de simulación *</label>
-                        <input type="date" id="fecha_evaluacion" name="fecha_evaluacion" 
-                               value="<?php echo date('Y-m-d'); ?>" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="evaluador">Responsable de la simulación *</label>
-                    <input type="text" id="evaluador" name="evaluador" 
-                           value="David Fernando Bustillos Rosas" required>
-                </div>
-                <div class="btn-grupo">
-                    <button type="button" class="btn btn-primario" onclick="mostrarTab('tab-evaluacion')">
-                        Siguiente → Simulador
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- TAB 2: EVALUACIÓN -->
-        <!-- ========================================== -->
-        <div id="tab-evaluacion" class="tab-contenido">
-            <div class="card">
-                <h2>
-                    Simulador de cumplimiento normativo
-                </h2>
-                <p style="color: var(--gray-500); margin-bottom: 24px;">
-                    El simulador está dividido en tres categorías. Cada pregunta permite asignar una ponderación, registrar la evidencia encontrada y seleccionar el nivel de cumplimiento.
-                </p>
-
-                <!-- ===== CATEGORÍA 1: ACTUALIZADA ===== -->
-                <h3 class="categoria-titulo"><span>Categoría 1</span> Políticas institucionales de seguridad y protección de datos personales</h3>
-                <div id="categoria-1">
-                    <?php
-                    // PREGUNTAS ACTUALIZADAS - CATEGORÍA 1 (7 preguntas)
-                    $preguntas_cat1 = [
-                        "¿Cuenta la institución con políticas de seguridad de la información que cumplan con lo dispuesto en la Ley de Protección de Datos Personales?",
-                        "¿Tiene alguna estructura o designación formal el área de protección de datos personales (ej. Delegado/Oficial de Protección de Datos)?",
-                        "¿Existe el consentimiento previo, explícito e informado de los estudiantes y docentes antes de capturar datos sensibles, como por ejemplo los biométricos?",
-                        "¿Se cuenta con cláusulas o avisos de privacidad visibles e informativos al momento de recolectar cualquier tipo de dato personal?",
-                        "¿Existe algún procedimiento para los estudiantes y personal que quieran ejercer sus derechos ARCO (Acceso, Rectificación, Cancelación y Oposición) y de retención de datos?",
-                        "¿Están definidos los canales oficiales (físicos o digitales) para atenciones de solicitudes ARCO?",
-                        "¿Existen medidas de seguridad técnicas (cifrado, control de acceso basado en roles) para proteger las bases de datos que contienen datos biométricos y personales?"
-                    ];
-                    
-                    foreach ($preguntas_cat1 as $index => $texto):
-                        $pregunta_id = $index + 1;
-                    ?>
-                    <div class="pregunta-item">
-                        <div class="pregunta-texto"><?php echo $pregunta_id; ?>. <?php echo $texto; ?></div>
-                        <div class="pregunta-controles">
-                            <div>
-                                <label>Ponderación (%)</label>
-                                <input type="number" class="input-porcentaje" 
-                                       name="cat1_peso_<?php echo $pregunta_id; ?>" 
-                                       value="<?php echo $pregunta_id === 7 ? '14.26' : '14.29'; ?>" min="0" max="100" step="0.01">
-                            </div>
-                            <div>
-                                <label>Estado de Cumplimiento</label>
-                                <select class="select-estado" name="cat1_estado_<?php echo $pregunta_id; ?>">
-                                    <option value="Cumple totalmente">Cumple totalmente</option>
-                                    <option value="Cumple parcialmente" selected>Cumple parcialmente</option>
-                                    <option value="No cumple">No cumple</option>
-                                    <option value="No aplica">No aplica</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>Evidencia / Observación</label>
-                                <input type="text" class="input-observacion" 
-                                       name="cat1_observacion_<?php echo $pregunta_id; ?>" 
-                                       placeholder="Registre la evidencia encontrada" style="width:100%;">
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <div class="peso-total">Ponderación categoría 1: <strong id="peso-total-cat1">100.00%</strong></div>
-
-                <!-- ===== CATEGORÍA 2 ===== -->
-                <h3 class="categoria-titulo"><span>Categoría 2</span> Sistema de acceso biométrico: ciberseguridad, flujo y gestión de la información</h3>
-                <div id="categoria-2">
-                    <?php
-                    // PREGUNTAS ACTUALIZADAS - CATEGORÍA 2 (15 preguntas)
-                    $preguntas_cat2 = [
-                        "¿El sistema web instalado cuenta con un sistema de seguridad robusto?",
-                        "¿Los dispositivos de captura (sensores biométricos) cuentan con cifrado de la información de las huellas y rostros capturados?",
-                        "¿Los dispositivos de captura (sensores biométricos) cuentan con un sistema o están conectados a un UPS?",
-                        "¿El sistema permite modos alternativos de acceso autorizados en caso de fallo técnico de la biometría?",
-                        "¿El sistema convierte las características biométricas en representaciones matemáticas (templates/hashes) incompletas no reversibles?",
-                        "¿Las imágenes biométricas originales (rostros o huellas brutas) son eliminadas inmediatamente tras generar el vector de características?",
-                        "¿La base de datos donde se almacenan los patrones biométricos cuenta con algoritmos de cifrado robustos?",
-                        "¿Las transmisiones de datos entre los dispositivos biométricos de los laboratorios y el servidor se realizan mediante canales cifrados?",
-                        "¿Existe consentimiento previo, expreso e informado (físico o digital) antes del registro biométrico de estudiantes y docentes de Software?",
-                        "¿Se dispone de un mecanismo accesible para que el estudiante/docente pueda revocar su consentimiento u opositarse al uso biométrico?",
-                        "¿Existe una alternativa equivalente no biométrica (ej. tarjeta NFC, clave personal) para el acceso a aulas y laboratorios?",
-                        "¿El sistema registra trazabilidad completa de cada intento de acceso, incluyendo fecha, hora, usuario y resultado?",
-                        "¿El acceso a la consola de administración del sistema biométrico está restringido únicamente a personal técnico autorizado?",
-                        "¿Existen procedimientos de depuración automática para eliminar registros biométricos de estudiantes que se retiran o gradúan?",
-                        "¿Existen respaldos periódicos y seguros de la base de datos del sistema biométrico?"
-                    ];
-                    
-                    foreach ($preguntas_cat2 as $index => $texto):
-                        $pregunta_id = $index + 1;
-                    ?>
-                    <div class="pregunta-item">
-                        <div class="pregunta-texto"><?php echo $pregunta_id; ?>. <?php echo $texto; ?></div>
-                        <div class="pregunta-controles">
-                            <div>
-                                <label>Ponderación (%)</label>
-                                <input type="number" class="input-porcentaje" 
-                                       name="cat2_peso_<?php echo $pregunta_id; ?>" 
-                                       value="<?php echo $pregunta_id === 15 ? '6.62' : '6.67'; ?>" min="0" max="100" step="0.01">
-                            </div>
-                            <div>
-                                <label>Estado de Cumplimiento</label>
-                                <select class="select-estado" name="cat2_estado_<?php echo $pregunta_id; ?>">
-                                    <option value="Cumple totalmente">Cumple totalmente</option>
-                                    <option value="Cumple parcialmente" selected>Cumple parcialmente</option>
-                                    <option value="No cumple">No cumple</option>
-                                    <option value="No aplica">No aplica</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>Evidencia / Observación</label>
-                                <input type="text" class="input-observacion" 
-                                       name="cat2_observacion_<?php echo $pregunta_id; ?>" 
-                                       placeholder="Registre la evidencia encontrada" style="width:100%;">
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <div class="peso-total">Ponderación categoría 2: <strong id="peso-total-cat2">100.00%</strong></div>
-
-                <!-- ===== CATEGORÍA 3: ACTORES DEL SISTEMA (SOLO 3 PREGUNTAS) ===== -->
-<h3 class="categoria-titulo"><span>Categoría 3</span> Actores que forman parte del sistema: usuarios y operadores</h3>
-<div id="categoria-3">
-    <?php
-    // SOLO 3 PREGUNTAS - CATEGORÍA 3
-    $preguntas_cat3 = [
-        "¿Se ha realizado una Evaluación de Impacto en la Protección de Datos (EIPD) antes de implementar tecnologías de control de acceso biométrico?",
-        "¿La comunidad institucional recibe capacitaciones periódicas acerca de la normativa y las políticas de seguridad y protección de datos personales?",
-        "¿Los operarios y desarrolladores del sistema biométrico han sido capacitados en el tratamiento de datos personales sensibles y en los procedimientos institucionales aplicables?"
-    ];
-    
-    foreach ($preguntas_cat3 as $index => $texto):
-        $pregunta_id = $index + 1;
-    ?>
-    <div class="pregunta-item">
-        <div class="pregunta-texto"><?php echo $pregunta_id; ?>. <?php echo $texto; ?></div>
-        <div class="pregunta-controles">
+    <section class="wizard-status">
+        <div class="wizard-status-top">
             <div>
-                <label>Ponderación (%)</label>
-                <input type="number" class="input-porcentaje" 
-                       name="cat3_peso_<?php echo $pregunta_id; ?>" 
-                       value="<?php echo $pregunta_id === 3 ? '33.34' : '33.33'; ?>" min="0" max="100" step="0.01">
+                <span id="paso-actual-label" class="wizard-kicker">Paso 1 de 7</span>
+                <strong id="paso-actual-titulo">Información general</strong>
             </div>
-            <div>
-                <label>Estado de Cumplimiento</label>
-                <select class="select-estado" name="cat3_estado_<?php echo $pregunta_id; ?>">
-                    <option value="Cumple totalmente">Cumple totalmente</option>
-                    <option value="Cumple parcialmente" selected>Cumple parcialmente</option>
-                    <option value="No cumple">No cumple</option>
-                    <option value="No aplica">No aplica</option>
-                </select>
-            </div>
-            <div>
-                <label>Evidencia / Observación</label>
-                <input type="text" class="input-observacion" 
-                       name="cat3_observacion_<?php echo $pregunta_id; ?>" 
-                       placeholder="Registre la evidencia encontrada" style="width:100%;">
-            </div>
+            <div class="wizard-percent"><span id="avance-pasos-num">14</span>%</div>
         </div>
-    </div>
-    <?php endforeach; ?>
-</div>
-<div class="peso-total">Ponderación categoría 3: <strong id="peso-total-cat3">100.00%</strong></div>
-                <div class="btn-grupo" style="justify-content: space-between;">
-                    <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-general')">← Anterior</button>
-                    <button type="button" class="btn btn-primario" onclick="generarHallazgos(); mostrarTab('tab-hallazgos');">Siguiente → Hallazgos</button>
-                </div>
-            </div>
-        </div>
+        <div class="wizard-track"><div id="avance-pasos-bar" class="wizard-fill" style="width:14.28%"></div></div>
+    </section>
 
-        <!-- ========================================== -->
-        <!-- TAB 3: HALLAZGOS -->
-        <!-- ========================================== -->
-        <div id="tab-hallazgos" class="tab-contenido">
-            <div class="card">
-                <h2>
-                    Hallazgos identificados
-                </h2>
-                <p style="color: var(--gray-500); margin-bottom: 20px;">
-                    Este módulo presenta los requisitos en los que se detectó cumplimiento parcial o incumplimiento, 
-                    junto con la evidencia registrada durante la simulación.
-                </p>
-                <div id="hallazgos-container">
-                    <p style="color: #94A3B8;">Complete el simulador para generar los hallazgos automáticamente.</p>
-                </div>
-                <div class="btn-grupo" style="justify-content: space-between; margin-top: 20px;">
-                    <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-evaluacion')">← Simulador</button>
-                    <button type="button" class="btn btn-primario" onclick="mostrarTab('tab-conclusiones')">Siguiente → Conclusiones</button>
-                </div>
-            </div>
-        </div>
+    <div class="work-layout">
+        <aside class="step-sidebar" aria-label="Progreso de la simulación">
+            <button class="step-tab activo" data-tab="tab-general" data-step="1" type="button">
+                <span class="step-index">1</span><span><strong>Información general</strong><small>Datos de la simulación</small></span>
+            </button>
+            <button class="step-tab bloqueado" data-tab="tab-cat1" data-step="2" type="button">
+                <span class="step-index">2</span><span><strong>Categoría 1</strong><small>Políticas institucionales</small></span>
+            </button>
+            <button class="step-tab bloqueado" data-tab="tab-cat2" data-step="3" type="button">
+                <span class="step-index">3</span><span><strong>Categoría 2</strong><small>Sistema biométrico</small></span>
+            </button>
+            <button class="step-tab bloqueado" data-tab="tab-cat3" data-step="4" type="button">
+                <span class="step-index">4</span><span><strong>Categoría 3</strong><small>Actores del sistema</small></span>
+            </button>
+            <button class="step-tab bloqueado" data-tab="tab-hallazgos" data-step="5" type="button">
+                <span class="step-index">5</span><span><strong>Hallazgos</strong><small>Revisión automática</small></span>
+            </button>
+            <button class="step-tab bloqueado" data-tab="tab-cierre" data-step="6" type="button">
+                <span class="step-index">6</span><span><strong>Cierre</strong><small>Conclusiones y recomendaciones</small></span>
+            </button>
+            <button class="step-tab bloqueado" data-tab="tab-dashboard" data-step="7" type="button">
+                <span class="step-index">7</span><span><strong>Dashboard</strong><small>Resultados finales</small></span>
+            </button>
+            <button class="step-help" data-tab="tab-acerca" type="button">Acerca del simulador</button>
+        </aside>
 
-        <!-- ========================================== -->
-        <!-- TAB 4: CONCLUSIONES -->
-        <!-- ========================================== -->
-        <div id="tab-conclusiones" class="tab-contenido">
-            <div class="card">
-                <h2>
-                    Conclusiones
-                </h2>
-                <div class="form-group">
-                    <label for="conclusiones">Conclusiones</label>
-                    <textarea id="conclusiones" name="conclusiones" rows="8" 
-                              placeholder="Ej: El sistema de control de acceso biométrico demuestra un nivel elevado de cumplimiento técnico..."></textarea>
-                </div>
-                <div class="btn-grupo" style="justify-content: space-between;">
-                    <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-hallazgos')">← Hallazgos</button>
-                    <button type="button" class="btn btn-primario" onclick="mostrarTab('tab-recomendaciones')">Siguiente → Recomendaciones</button>
-                </div>
-            </div>
-        </div>
+        <main class="main-stage">
+            <form id="form-evaluacion" action="guardar_evaluacion.php" method="POST" novalidate>
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
 
-        <!-- ========================================== -->
-        <!-- TAB 5: RECOMENDACIONES -->
-        <!-- ========================================== -->
-        <div id="tab-recomendaciones" class="tab-contenido">
-            <div class="card">
-                <h2>
-                    Recomendaciones
-                </h2>
-                <div class="form-group">
-                    <label for="recomendaciones">Recomendaciones</label>
-                    <textarea id="recomendaciones" name="recomendaciones" rows="8" 
-                              placeholder="Ej: Se recomienda migrar el almacenamiento de imágenes faciales hacia vectores matemáticos irreversibles..."></textarea>
-                </div>
-                <div class="btn-grupo" style="justify-content: space-between;">
-                    <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-conclusiones')">← Conclusiones</button>
-                    <button type="button" class="btn btn-exito" onclick="mostrarTab('tab-dashboard')">Ver Dashboard →</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================================== -->
-<!-- TAB 6: DASHBOARD DE RESULTADOS -->
-<!-- ========================================== -->
-<div id="tab-dashboard" class="tab-contenido">
-    <div class="card">
-        <h2>Dashboard de resultados</h2>
-        <p style="color: var(--gray-500); margin-bottom: 24px;">
-            Resumen gráfico de los resultados del simulador. Los indicadores se actualizan en tiempo real.
-        </p>
-
-        <!-- ========== TARJETAS KPI ========== -->
-        <div class="dashboard-grid">
-            <div class="dashboard-card">
-                <div class="label">Políticas institucionales</div>
-                <div id="porcentaje-cat1" class="value color-verde">0%</div>
-                <div class="sub">Cumplimiento normativo</div>
-                <div class="barra-progreso barra-verde">
-                    <div id="barra-cat1" class="barra" style="width:0%;"></div>
-                </div>
-            </div>
-            
-            <div class="dashboard-card">
-                <div class="label">Sistema biométrico</div>
-                <div id="porcentaje-cat2" class="value color-verde">0%</div>
-                <div class="sub">Ciberseguridad y gestión</div>
-                <div class="barra-progreso barra-verde">
-                    <div id="barra-cat2" class="barra" style="width:0%;"></div>
-                </div>
-            </div>
-            
-            <div class="dashboard-card">
-                <div class="label">Actores del sistema</div>
-                <div id="porcentaje-cat3" class="value color-verde">0%</div>
-                <div class="sub">Capacitación y conocimiento</div>
-                <div class="barra-progreso barra-verde">
-                    <div id="barra-cat3" class="barra" style="width:0%;"></div>
-                </div>
-            </div>
-            
-            <div class="dashboard-card dashboard-card-destacado">
-                <div class="label">Promedio general</div>
-                <div id="promedio-general" class="value">0%</div>
-                <div class="sub">Total de preguntas: <span id="total-preguntas">0</span> · Nivel: <span id="nivel-general">Bajo</span></div>
-                
-            </div>
-        </div>
-
-        <!-- ========== GRÁFICOS DETALLADOS ========== -->
-        <div class="chart-container">
-            <div class="chart-box">
-                <h3>Nivel de cumplimiento por categoría</h3>
-                <div class="bar-chart chart-fallback">
-                    <div class="bar-item bar-primary">
-                        <span class="bar-label">Políticas institucionales</span>
-                        <div class="bar-track">
-                            <div id="barra-detalle-cat1" class="bar-fill" style="width:0%;">0%</div>
+                <section id="tab-general" class="tab-contenido activo" data-step="1">
+                    <div class="card section-card accent-blue">
+                        <div class="section-heading">
+                            <div><span class="section-number">01</span><h2>Información general</h2></div>
+                            <p>Registre los datos que identificarán esta simulación.</p>
                         </div>
-                        <span class="bar-percent" id="detalle-porcentaje-cat1">0%</span>
-                    </div>
-                    <div class="bar-item bar-success">
-                        <span class="bar-label">Sistema biométrico</span>
-                        <div class="bar-track">
-                            <div id="barra-detalle-cat2" class="bar-fill" style="width:0%;">0%</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nombre_institucion">Nombre de la institución *</label>
+                                <input type="text" id="nombre_institucion" name="nombre_institucion" value="Instituto Tecnológico Universitario ISMAC" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="ruc">RUC / Identificación <span class="campo-opcional">(opcional)</span></label>
+                                <input type="text" id="ruc" name="ruc" placeholder="No obligatorio">
+                            </div>
                         </div>
-                        <span class="bar-percent" id="detalle-porcentaje-cat2">0%</span>
-                    </div>
-                    <div class="bar-item bar-warning">
-                        <span class="bar-label">Actores del sistema</span>
-                        <div class="bar-track">
-                            <div id="barra-detalle-cat3" class="bar-fill" style="width:0%;">0%</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nombre_sistema">Sistema analizado *</label>
+                                <input type="text" id="nombre_sistema" name="nombre_sistema" value="Sistema Biométrico de Control de Acceso" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fecha_evaluacion">Fecha de simulación *</label>
+                                <input type="date" id="fecha_evaluacion" name="fecha_evaluacion" value="<?php echo date('Y-m-d'); ?>" required>
+                            </div>
                         </div>
-                        <span class="bar-percent" id="detalle-porcentaje-cat3">0%</span>
+                        <div class="form-group">
+                            <label for="evaluador">Responsable de la simulación *</label>
+                            <input type="text" id="evaluador" name="evaluador" value="David Fernando Bustillos Rosas" required>
+                        </div>
+                        <div class="btn-grupo btn-end">
+                            <button type="button" class="btn btn-primary" onclick="avanzarPaso('tab-general','tab-cat1')">Continuar a Categoría 1</button>
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <div class="chart-box">
-                <h3>Distribución de estados</h3>
-                <div class="donut-wrap" aria-label="Distribución de estados de cumplimiento">
-                    <div id="donut-estados" class="donut-chart">
-                        <div class="donut-center"><strong id="donut-total">0</strong><span>respuestas</span></div>
-                    </div>
-                </div>
-                <div class="metrics-grid">
-                    <div class="metric-item">
-                        <div class="metric-dot" style="background: #16a34a;"></div>
-                        <span class="metric-text">Cumple totalmente</span>
-                        <span class="metric-count" id="totales-cumple">0</span>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-dot" style="background: #d97706;"></div>
-                        <span class="metric-text">Cumple parcialmente</span>
-                        <span class="metric-count" id="totales-parcial">0</span>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-dot" style="background: #dc2626;"></div>
-                        <span class="metric-text">No cumple</span>
-                        <span class="metric-count" id="totales-no-cumple">0</span>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-dot" style="background: #94A3B8;"></div>
-                        <span class="metric-text">No aplica</span>
-                        <span class="metric-count" id="totales-no-aplica">0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+                </section>
 
-        <div class="metodologia-nota">
-            <strong>Metodología:</strong> Cumple totalmente = 100% del peso; cumple parcialmente = 50%; no cumple = 0%; “No aplica” se excluye del denominador. El promedio general corresponde al promedio de las categorías aplicables.
-        </div>
+                <?php foreach ($categorias as $id => $categoria): ?>
+                <section id="tab-cat<?php echo $id; ?>" class="tab-contenido" data-step="<?php echo $id + 1; ?>">
+                    <div class="category-layout">
+                        <div class="card section-card accent-cat<?php echo $id; ?>">
+                            <div class="section-heading">
+                                <div><span class="section-number">0<?php echo $id + 1; ?></span><h2>Categoría <?php echo $id; ?></h2></div>
+                                <p><?php echo htmlspecialchars($categoria['titulo'], ENT_QUOTES, 'UTF-8'); ?></p>
+                            </div>
+                            <div class="category-note">Seleccione el estado de cada requisito. El porcentaje se recalcula inmediatamente.</div>
+                            <div id="categoria-<?php echo $id; ?>">
+                                <?php renderCategoria($id, $categoria); ?>
+                            </div>
+                            <div class="peso-total">Ponderación total: <strong id="peso-total-cat<?php echo $id; ?>">100.00%</strong></div>
+                            <div class="btn-grupo btn-between">
+                                <button type="button" class="btn btn-secondary" onclick="mostrarTab('<?php echo $id === 1 ? 'tab-general' : 'tab-cat' . ($id - 1); ?>')">Anterior</button>
+                                <button type="button" class="btn btn-primary" onclick="avanzarPaso('tab-cat<?php echo $id; ?>','<?php echo $id === 3 ? 'tab-hallazgos' : 'tab-cat' . ($id + 1); ?>')">Guardar paso y continuar</button>
+                            </div>
+                        </div>
+                        <aside class="live-card cat<?php echo $id; ?>">
+                            <div class="live-title">Resultado en tiempo real</div>
+                            <div class="score-ring" id="ring-cat<?php echo $id; ?>" style="--score:0; --ring:#2563eb">
+                                <div class="score-ring-inner"><strong id="ring-value-cat<?php echo $id; ?>">0%</strong><span>cumplimiento</span></div>
+                            </div>
+                            <div class="live-stats">
+                                <div><span>Respondidas</span><strong id="respondidas-cat<?php echo $id; ?>">0</strong></div>
+                                <div><span>Total</span><strong><?php echo count($categoria['preguntas']); ?></strong></div>
+                            </div>
+                            <div class="mini-progress"><div id="avance-cat<?php echo $id; ?>" style="width:0%"></div></div>
+                            <p>Este indicador cambia mientras selecciona las respuestas de la categoría.</p>
+                        </aside>
+                    </div>
+                </section>
+                <?php endforeach; ?>
 
-        <!-- ========== BOTONES ========== -->
-        <div class="btn-group" style="justify-content: space-between; margin-top: 24px;">
-            <button type="button" class="btn btn-warning" onclick="mostrarTab('tab-recomendaciones')">← Recomendaciones</button>
-            <div class="acciones-finales">
-                <button type="submit" class="btn btn-success" onclick="return confirm('¿Desea guardar esta simulación y abrir el dashboard final?')">
-                    Guardar simulación
-                </button>
-                <span class="ayuda-accion">El informe PDF se genera desde el dashboard una vez guardados los datos.</span>
-            </div>
-        </div>
+                <section id="tab-hallazgos" class="tab-contenido" data-step="5">
+                    <div class="card section-card accent-amber">
+                        <div class="section-heading">
+                            <div><span class="section-number">05</span><h2>Hallazgos identificados</h2></div>
+                            <p>Se muestran únicamente requisitos con cumplimiento parcial o incumplimiento.</p>
+                        </div>
+                        <div id="hallazgos-container"></div>
+                        <div class="pdf-note">Los hallazgos se conservan en el sistema y en la base de datos, pero no se incluyen en el PDF final.</div>
+                        <div class="btn-grupo btn-between">
+                            <button type="button" class="btn btn-secondary" onclick="mostrarTab('tab-cat3')">Anterior</button>
+                            <button type="button" class="btn btn-primary" onclick="avanzarPaso('tab-hallazgos','tab-cierre')">Continuar</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tab-cierre" class="tab-contenido" data-step="6">
+                    <div class="card section-card accent-purple">
+                        <div class="section-heading">
+                            <div><span class="section-number">06</span><h2>Conclusiones y recomendaciones</h2></div>
+                            <p>Registre el cierre técnico que acompañará los resultados del simulador.</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="conclusiones">Conclusiones</label>
+                            <textarea id="conclusiones" name="conclusiones" rows="7" placeholder="Describa los resultados principales obtenidos..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="recomendaciones">Recomendaciones</label>
+                            <textarea id="recomendaciones" name="recomendaciones" rows="7" placeholder="Detalle las acciones técnicas o administrativas recomendadas..."></textarea>
+                        </div>
+                        <div class="btn-grupo btn-between">
+                            <button type="button" class="btn btn-secondary" onclick="mostrarTab('tab-hallazgos')">Anterior</button>
+                            <button type="button" class="btn btn-primary" onclick="avanzarPaso('tab-cierre','tab-dashboard')">Ver dashboard</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tab-dashboard" class="tab-contenido" data-step="7">
+                    <div class="card section-card dashboard-final">
+                        <div class="section-heading">
+                            <div><span class="section-number">07</span><h2>Dashboard de resultados</h2></div>
+                            <p>Vista previa antes de guardar la simulación en la base de datos.</p>
+                        </div>
+
+                        <div class="score-grid">
+                            <div class="score-card score-blue">
+                                <div class="score-ring small" id="dash-ring-cat1" style="--score:0; --ring:#2563eb"><div class="score-ring-inner"><strong id="porcentaje-cat1">0%</strong><span>Categoría 1</span></div></div>
+                                <h3>Políticas institucionales</h3>
+                            </div>
+                            <div class="score-card score-green">
+                                <div class="score-ring small" id="dash-ring-cat2" style="--score:0; --ring:#16a34a"><div class="score-ring-inner"><strong id="porcentaje-cat2">0%</strong><span>Categoría 2</span></div></div>
+                                <h3>Sistema biométrico</h3>
+                            </div>
+                            <div class="score-card score-purple">
+                                <div class="score-ring small" id="dash-ring-cat3" style="--score:0; --ring:#7c3aed"><div class="score-ring-inner"><strong id="porcentaje-cat3">0%</strong><span>Categoría 3</span></div></div>
+                                <h3>Actores del sistema</h3>
+                            </div>
+                            <div class="score-card score-dark">
+                                <div class="score-ring small" id="dash-ring-general" style="--score:0; --ring:#06b6d4"><div class="score-ring-inner"><strong id="promedio-general">0%</strong><span>Promedio</span></div></div>
+                                <h3 id="nivel-general">Sin evaluar</h3>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <div class="chart-box">
+                                <h3>Cumplimiento por categoría</h3>
+                                <div class="bar-chart">
+                                    <div class="bar-item bar-primary"><span class="bar-label">Políticas institucionales</span><div class="bar-track"><div id="barra-detalle-cat1" class="bar-fill" style="width:0%"></div></div><span id="detalle-porcentaje-cat1" class="bar-percent">0%</span></div>
+                                    <div class="bar-item bar-success"><span class="bar-label">Sistema biométrico</span><div class="bar-track"><div id="barra-detalle-cat2" class="bar-fill" style="width:0%"></div></div><span id="detalle-porcentaje-cat2" class="bar-percent">0%</span></div>
+                                    <div class="bar-item bar-warning"><span class="bar-label">Actores del sistema</span><div class="bar-track"><div id="barra-detalle-cat3" class="bar-fill" style="width:0%"></div></div><span id="detalle-porcentaje-cat3" class="bar-percent">0%</span></div>
+                                </div>
+                            </div>
+                            <div class="chart-box">
+                                <h3>Distribución de respuestas</h3>
+                                <div class="donut-wrap"><div id="donut-estados" class="donut-chart"><div class="donut-center"><strong id="donut-total">0</strong><span>respuestas</span></div></div></div>
+                                <div class="metrics-grid">
+                                    <div class="metric-item"><span class="metric-dot dot-green"></span><span class="metric-text">Cumple totalmente</span><strong id="totales-cumple">0</strong></div>
+                                    <div class="metric-item"><span class="metric-dot dot-amber"></span><span class="metric-text">Cumple parcialmente</span><strong id="totales-parcial">0</strong></div>
+                                    <div class="metric-item"><span class="metric-dot dot-red"></span><span class="metric-text">No cumple</span><strong id="totales-no-cumple">0</strong></div>
+                                    <div class="metric-item"><span class="metric-dot dot-gray"></span><span class="metric-text">No aplica</span><strong id="totales-no-aplica">0</strong></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metodologia-nota"><strong>Metodología:</strong> Cumple totalmente = 100% del peso; cumple parcialmente = 50%; no cumple = 0%; “No aplica” se excluye del denominador.</div>
+                        <div class="btn-grupo btn-between">
+                            <button type="button" class="btn btn-secondary" onclick="mostrarTab('tab-cierre')">Anterior</button>
+                            <button type="submit" class="btn btn-success">Guardar simulación y abrir dashboard final</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tab-acerca" class="tab-contenido">
+                    <div class="card section-card accent-slate">
+                        <div class="section-heading"><div><h2>Acerca del simulador</h2></div><p>Información técnica y académica del proyecto.</p></div>
+                        <div class="info-grid">
+                            <article class="info-bloque"><h3>Base normativa</h3><p>El simulador toma como referencia la Ley Orgánica de Protección de Datos Personales del Ecuador y su Reglamento General, con énfasis en consentimiento, transparencia, derechos de los titulares, seguridad y tratamiento de datos biométricos.</p></article>
+                            <article class="info-bloque"><h3>Funcionamiento</h3><p>La simulación revisa tres grupos de requisitos. Cada respuesta aporta al cálculo según la ponderación definida y el estado de cumplimiento seleccionado.</p></article>
+                            <article class="info-bloque"><h3>Tecnologías</h3><p>PHP, MySQL, JavaScript, HTML y CSS. La generación del informe utiliza TCPDF. Los resultados se recalculan en servidor antes de mostrar el dashboard final.</p></article>
+                            <article class="info-bloque"><h3>Alcance</h3><p>El resultado constituye un apoyo académico y técnico para el análisis del sistema biométrico. No sustituye una auditoría jurídica o de ciberseguridad especializada.</p></article>
+                        </div>
+                        <div class="btn-grupo"><button type="button" class="btn btn-secondary" onclick="volverPasoActual()">Volver a la simulación</button></div>
+                    </div>
+                </section>
+            </form>
+        </main>
     </div>
 </div>
-
-        <!-- ========================================== -->
-        <!-- TAB 7: ACERCA DEL SIMULADOR -->
-        <!-- ========================================== -->
-        <div id="tab-acerca" class="tab-contenido">
-            <div class="card">
-                <h2>Acerca del simulador</h2>
-                <p class="intro-texto">
-                    Este simulador fue desarrollado como parte de un proyecto de titulación de la carrera de Desarrollo de Software. Su objetivo es apoyar la revisión académica de un sistema de control de acceso biométrico frente a criterios relacionados con protección de datos personales.
-                </p>
-
-                <div class="info-grid">
-                    <section class="info-bloque">
-                        <h3>Base normativa</h3>
-                        <p>La estructura del simulador toma como referencia la Ley Orgánica de Protección de Datos Personales del Ecuador (LOPDP) y su Reglamento General. Las preguntas se concentran en aspectos de consentimiento, transparencia, ejercicio de derechos, seguridad de la información y tratamiento de datos biométricos.</p>
-                    </section>
-                    <section class="info-bloque">
-                        <h3>Qué analiza</h3>
-                        <p>Se revisan tres grupos: políticas institucionales, controles del sistema biométrico y responsabilidades de los actores que utilizan u operan el sistema.</p>
-                    </section>
-                    <section class="info-bloque">
-                        <h3>Cómo calcula el resultado</h3>
-                        <p>Cada requisito tiene una ponderación. “Cumple totalmente” aporta el 100% del peso, “Cumple parcialmente” el 50%, “No cumple” el 0% y “No aplica” se excluye del cálculo. El dashboard presenta resultados por categoría y un promedio general.</p>
-                    </section>
-                    <section class="info-bloque">
-                        <h3>Tecnologías utilizadas</h3>
-                        <p>El sistema está desarrollado con PHP, MySQL, JavaScript, HTML y CSS. Los informes se generan en PDF mediante TCPDF.</p>
-                    </section>
-                </div>
-
-                <div class="aviso-academico">
-                    <strong>Alcance académico:</strong> el resultado es una referencia para análisis y documentación del proyecto. No reemplaza una auditoría jurídica, técnica o de seguridad realizada por profesionales especializados.
-                </div>
-
-                <div class="btn-grupo" style="justify-content: space-between;">
-                    <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-dashboard')">← Dashboard</button>
-                    <button type="button" class="btn btn-primario" onclick="mostrarTab('tab-general')">Volver al inicio</button>
-                </div>
-            </div>
-        </div>
-    </form>
-</div>
-
 <script src="js/funciones.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        actualizarDashboard();
-    });
-</script>
 </body>
 </html>
