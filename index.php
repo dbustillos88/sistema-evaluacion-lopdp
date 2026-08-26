@@ -4,15 +4,17 @@
 // PÁGINA PRINCIPAL - VERSIÓN MEJORADA
 // =============================================
 session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evaluación LOPDP - Sistema Biométrico</title>
+    <title>Simulador LOPDP - Sistema Biométrico</title>
     <link rel="stylesheet" href="css/estilos.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 <div class="container">
@@ -20,78 +22,85 @@ session_start();
     <div class="header">
         <div class="header-content">
             <div>
-                <h1>📊 Evaluación de Cumplimiento LOPDP</h1>
-                <p class="subtitle">Sistema de control de acceso biométrico - Carrera de Desarrollo de Software</p>
+                <h1>Simulador de Cumplimiento LOPDP</h1>
+                <p class="subtitle">Sistema de control de acceso biométrico · Proyecto de titulación de Desarrollo de Software</p>
             </div>
-            <div class="badge">
-                <i class="fas fa-building"></i> Instituto Tecnológico Universitario ISMAC
-            </div>
+            <div class="badge">Instituto Tecnológico Universitario ISMAC</div>
         </div>
     </div>
 
-    <!-- TABS DE NAVEGACIÓN -->
-    <div class="tabs">
-        <button class="tab activo" data-tab="tab-general" onclick="mostrarTab('tab-general')">
-            <span class="tab-icon">📋</span> 1. Información General
+    <?php if (!empty($_SESSION['error_formulario'])): ?>
+        <div class="mensaje-error">
+            <?php echo htmlspecialchars($_SESSION['error_formulario'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['error_formulario']); ?>
+        </div>
+    <?php endif; ?>
+
+    <!-- NAVEGACIÓN DEL SIMULADOR -->
+    <div class="tabs" role="tablist" aria-label="Secciones del simulador">
+        <button class="tab activo" data-tab="tab-general" onclick="mostrarTab('tab-general')" type="button">
+            <span class="tab-number">1</span> Información general
         </button>
-        <button class="tab" data-tab="tab-evaluacion" onclick="mostrarTab('tab-evaluacion')">
-            <span class="tab-icon">📝</span> 2. Evaluación
+        <button class="tab" data-tab="tab-evaluacion" onclick="mostrarTab('tab-evaluacion')" type="button">
+            <span class="tab-number">2</span> Simulador
         </button>
-        <button class="tab" data-tab="tab-hallazgos" onclick="mostrarTab('tab-hallazgos')">
-            <span class="tab-icon">🔍</span> 3. Hallazgos
+        <button class="tab" data-tab="tab-hallazgos" onclick="mostrarTab('tab-hallazgos')" type="button">
+            <span class="tab-number">3</span> Hallazgos
         </button>
-        <button class="tab" data-tab="tab-conclusiones" onclick="mostrarTab('tab-conclusiones')">
-            <span class="tab-icon">📄</span> 4. Conclusiones
+        <button class="tab" data-tab="tab-conclusiones" onclick="mostrarTab('tab-conclusiones')" type="button">
+            <span class="tab-number">4</span> Conclusiones
         </button>
-        <button class="tab" data-tab="tab-recomendaciones" onclick="mostrarTab('tab-recomendaciones')">
-            <span class="tab-icon">💡</span> 5. Recomendaciones
+        <button class="tab" data-tab="tab-recomendaciones" onclick="mostrarTab('tab-recomendaciones')" type="button">
+            <span class="tab-number">5</span> Recomendaciones
         </button>
-        <button class="tab" data-tab="tab-dashboard" onclick="mostrarTab('tab-dashboard')">
-            <span class="tab-icon">📊</span> 6. Dashboard
+        <button class="tab" data-tab="tab-dashboard" onclick="mostrarTab('tab-dashboard')" type="button">
+            <span class="tab-number">6</span> Dashboard
+        </button>
+        <button class="tab" data-tab="tab-acerca" onclick="mostrarTab('tab-acerca')" type="button">
+            <span class="tab-number">7</span> Acerca del simulador
         </button>
     </div>
 
     <form id="form-evaluacion" action="guardar_evaluacion.php" method="POST">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
         <!-- ========================================== -->
         <!-- TAB 1: INFORMACIÓN GENERAL -->
         <!-- ========================================== -->
         <div id="tab-general" class="tab-contenido activo">
             <div class="card">
                 <h2>
-                    <span class="card-icon">📋</span>
-                    Información General de la Evaluación
+                    Información general del simulador
                 </h2>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="nombre_institucion">🏛️ Nombre de la Institución *</label>
+                        <label for="nombre_institucion">Nombre de la institución *</label>
                         <input type="text" id="nombre_institucion" name="nombre_institucion" 
                                value="Instituto Tecnológico Universitario ISMAC" required>
                     </div>
                     <div class="form-group">
-                        <label for="ruc">📄 RUC / Identificación <span style="color:#94A3B8;font-size:0.8rem;">(Opcional)</span></label>
+                        <label for="ruc">RUC / Identificación <span class="campo-opcional">(Opcional)</span></label>
                         <input type="text" id="ruc" name="ruc" placeholder="Opcional - no obligatorio">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="nombre_sistema">💻 Sistema Evaluado *</label>
+                        <label for="nombre_sistema">Sistema analizado *</label>
                         <input type="text" id="nombre_sistema" name="nombre_sistema" 
                                value="Sistema Biométrico de Control de Acceso" required>
                     </div>
                     <div class="form-group">
-                        <label for="fecha_evaluacion">📅 Fecha de Evaluación *</label>
+                        <label for="fecha_evaluacion">Fecha de simulación *</label>
                         <input type="date" id="fecha_evaluacion" name="fecha_evaluacion" 
                                value="<?php echo date('Y-m-d'); ?>" required>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="evaluador">👤 Evaluador *</label>
+                    <label for="evaluador">Responsable de la simulación *</label>
                     <input type="text" id="evaluador" name="evaluador" 
                            value="David Fernando Bustillos Rosas" required>
                 </div>
                 <div class="btn-grupo">
                     <button type="button" class="btn btn-primario" onclick="mostrarTab('tab-evaluacion')">
-                        Siguiente → Evaluación <i class="fas fa-arrow-right"></i>
+                        Siguiente → Simulador
                     </button>
                 </div>
             </div>
@@ -103,21 +112,14 @@ session_start();
         <div id="tab-evaluacion" class="tab-contenido">
             <div class="card">
                 <h2>
-                    <span class="card-icon">📝</span>
-                    Evaluación de Cumplimiento Normativo
+                    Simulador de cumplimiento normativo
                 </h2>
                 <p style="color: var(--gray-500); margin-bottom: 24px;">
-                    <i class="fas fa-info-circle"></i> La evaluación se encuentra dividida en tres categorías. 
-                    Cada pregunta permite ingresar el porcentaje de ponderación, registrar la evidencia encontrada 
-                    y establecer el nivel de cumplimiento.
+                    El simulador está dividido en tres categorías. Cada pregunta permite asignar una ponderación, registrar la evidencia encontrada y seleccionar el nivel de cumplimiento.
                 </p>
 
                 <!-- ===== CATEGORÍA 1: ACTUALIZADA ===== -->
-                <h3 style="color: var(--gray-700); margin: 30px 0 20px 0; display:flex; align-items:center; gap:12px; padding:16px 20px; background: linear-gradient(135deg, #EEF2FF, #E0E7FF); border-radius: 12px;">
-                    <span style="font-size:1.5rem;">📌</span> 
-                    <span style="font-weight:700; color: var(--primary);">Categoría 1.</span> 
-                    <span>Políticas institucionales de seguridad y protección de datos personales</span>
-                </h3>
+                <h3 class="categoria-titulo"><span>Categoría 1</span> Políticas institucionales de seguridad y protección de datos personales</h3>
                 <div id="categoria-1">
                     <?php
                     // PREGUNTAS ACTUALIZADAS - CATEGORÍA 1 (7 preguntas)
@@ -141,7 +143,7 @@ session_start();
                                 <label>Ponderación (%)</label>
                                 <input type="number" class="input-porcentaje" 
                                        name="cat1_peso_<?php echo $pregunta_id; ?>" 
-                                       value="14" min="0" max="100" step="0.5">
+                                       value="<?php echo $pregunta_id === 7 ? '14.26' : '14.29'; ?>" min="0" max="100" step="0.01">
                             </div>
                             <div>
                                 <label>Estado de Cumplimiento</label>
@@ -162,13 +164,10 @@ session_start();
                     </div>
                     <?php endforeach; ?>
                 </div>
+                <div class="peso-total">Ponderación categoría 1: <strong id="peso-total-cat1">100.00%</strong></div>
 
                 <!-- ===== CATEGORÍA 2 ===== -->
-                <h3 style="color: var(--gray-700); margin: 30px 0 20px 0; display:flex; align-items:center; gap:12px; padding:16px 20px; background: linear-gradient(135deg, #ECFDF5, #D1FAE5); border-radius: 12px;">
-                    <span style="font-size:1.5rem;">🔐</span> 
-                    <span style="font-weight:700; color: #059669;">Categoría 2.</span> 
-                    <span>Sistema de acceso biométrico (ciberseguridad, flujo y gestión de la información)</span>
-                </h3>
+                <h3 class="categoria-titulo"><span>Categoría 2</span> Sistema de acceso biométrico: ciberseguridad, flujo y gestión de la información</h3>
                 <div id="categoria-2">
                     <?php
                     // PREGUNTAS ACTUALIZADAS - CATEGORÍA 2 (15 preguntas)
@@ -200,7 +199,7 @@ session_start();
                                 <label>Ponderación (%)</label>
                                 <input type="number" class="input-porcentaje" 
                                        name="cat2_peso_<?php echo $pregunta_id; ?>" 
-                                       value="7" min="0" max="100" step="0.5">
+                                       value="<?php echo $pregunta_id === 15 ? '6.62' : '6.67'; ?>" min="0" max="100" step="0.01">
                             </div>
                             <div>
                                 <label>Estado de Cumplimiento</label>
@@ -221,13 +220,10 @@ session_start();
                     </div>
                     <?php endforeach; ?>
                 </div>
+                <div class="peso-total">Ponderación categoría 2: <strong id="peso-total-cat2">100.00%</strong></div>
 
                 <!-- ===== CATEGORÍA 3: ACTORES DEL SISTEMA (SOLO 3 PREGUNTAS) ===== -->
-<h3 style="color: var(--gray-700); margin: 30px 0 20px 0; display:flex; align-items:center; gap:12px; padding:16px 20px; background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 12px;">
-    <span style="font-size:1.5rem;">👥</span> 
-    <span style="font-weight:700; color: #B45309;">Categoría 3.</span> 
-    <span>Actores que forman parte del sistema (consumidores y operarios)</span>
-</h3>
+<h3 class="categoria-titulo"><span>Categoría 3</span> Actores que forman parte del sistema: usuarios y operadores</h3>
 <div id="categoria-3">
     <?php
     // SOLO 3 PREGUNTAS - CATEGORÍA 3
@@ -247,7 +243,7 @@ session_start();
                 <label>Ponderación (%)</label>
                 <input type="number" class="input-porcentaje" 
                        name="cat3_peso_<?php echo $pregunta_id; ?>" 
-                       value="33" min="0" max="100" step="0.5">
+                       value="<?php echo $pregunta_id === 3 ? '33.34' : '33.33'; ?>" min="0" max="100" step="0.01">
             </div>
             <div>
                 <label>Estado de Cumplimiento</label>
@@ -268,6 +264,7 @@ session_start();
     </div>
     <?php endforeach; ?>
 </div>
+<div class="peso-total">Ponderación categoría 3: <strong id="peso-total-cat3">100.00%</strong></div>
                 <div class="btn-grupo" style="justify-content: space-between;">
                     <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-general')">← Anterior</button>
                     <button type="button" class="btn btn-primario" onclick="generarHallazgos(); mostrarTab('tab-hallazgos');">Siguiente → Hallazgos</button>
@@ -281,18 +278,17 @@ session_start();
         <div id="tab-hallazgos" class="tab-contenido">
             <div class="card">
                 <h2>
-                    <span class="card-icon">🔍</span>
-                    Hallazgos Identificados
+                    Hallazgos identificados
                 </h2>
                 <p style="color: var(--gray-500); margin-bottom: 20px;">
                     Este módulo presenta los requisitos en los que se detectó cumplimiento parcial o incumplimiento, 
-                    junto con la evidencia registrada durante la evaluación.
+                    junto con la evidencia registrada durante la simulación.
                 </p>
                 <div id="hallazgos-container">
-                    <p style="color: #94A3B8;">Complete la evaluación para generar los hallazgos automáticamente.</p>
+                    <p style="color: #94A3B8;">Complete el simulador para generar los hallazgos automáticamente.</p>
                 </div>
                 <div class="btn-grupo" style="justify-content: space-between; margin-top: 20px;">
-                    <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-evaluacion')">← Evaluación</button>
+                    <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-evaluacion')">← Simulador</button>
                     <button type="button" class="btn btn-primario" onclick="mostrarTab('tab-conclusiones')">Siguiente → Conclusiones</button>
                 </div>
             </div>
@@ -304,7 +300,6 @@ session_start();
         <div id="tab-conclusiones" class="tab-contenido">
             <div class="card">
                 <h2>
-                    <span class="card-icon">📄</span>
                     Conclusiones
                 </h2>
                 <div class="form-group">
@@ -325,7 +320,6 @@ session_start();
         <div id="tab-recomendaciones" class="tab-contenido">
             <div class="card">
                 <h2>
-                    <span class="card-icon">💡</span>
                     Recomendaciones
                 </h2>
                 <div class="form-group">
@@ -341,23 +335,19 @@ session_start();
         </div>
 
         <!-- ========================================== -->
-<!-- TAB 6: DASHBOARD POWER BI -->
+<!-- TAB 6: DASHBOARD DE RESULTADOS -->
 <!-- ========================================== -->
 <div id="tab-dashboard" class="tab-contenido">
     <div class="card">
-        <h2>
-            <span class="card-icon">📊</span>
-            Dashboard de Resultados - Power BI Style
-        </h2>
+        <h2>Dashboard de resultados</h2>
         <p style="color: var(--gray-500); margin-bottom: 24px;">
-            Visualización profesional de los resultados de la evaluación. 
-            Los porcentajes se actualizan en tiempo real.
+            Resumen gráfico de los resultados del simulador. Los indicadores se actualizan en tiempo real.
         </p>
 
         <!-- ========== TARJETAS KPI ========== -->
         <div class="dashboard-grid">
             <div class="dashboard-card">
-                <div class="label">🏛️ Políticas Institucionales</div>
+                <div class="label">Políticas institucionales</div>
                 <div id="porcentaje-cat1" class="value color-verde">0%</div>
                 <div class="sub">Cumplimiento normativo</div>
                 <div class="barra-progreso barra-verde">
@@ -366,7 +356,7 @@ session_start();
             </div>
             
             <div class="dashboard-card">
-                <div class="label">🔐 Sistema Biométrico</div>
+                <div class="label">Sistema biométrico</div>
                 <div id="porcentaje-cat2" class="value color-verde">0%</div>
                 <div class="sub">Ciberseguridad y gestión</div>
                 <div class="barra-progreso barra-verde">
@@ -375,7 +365,7 @@ session_start();
             </div>
             
             <div class="dashboard-card">
-                <div class="label">👥 Actores del Sistema</div>
+                <div class="label">Actores del sistema</div>
                 <div id="porcentaje-cat3" class="value color-verde">0%</div>
                 <div class="sub">Capacitación y conocimiento</div>
                 <div class="barra-progreso barra-verde">
@@ -383,35 +373,35 @@ session_start();
                 </div>
             </div>
             
-            <div class="dashboard-card" style="background: linear-gradient(135deg, #4F46E5, #818CF8); color: white; border: none;">
-                <div class="label" style="color: rgba(255,255,255,0.7);">📈 Promedio General</div>
-                <div id="promedio-general" class="value" style="color: white;">0%</div>
-                <div class="sub" style="color: rgba(255,255,255,0.6);">Total de preguntas: <span id="total-preguntas">0</span></div>
-                <div style="position: absolute; right: 20px; bottom: 20px; font-size: 3rem; opacity: 0.15;">📊</div>
+            <div class="dashboard-card dashboard-card-destacado">
+                <div class="label">Promedio general</div>
+                <div id="promedio-general" class="value">0%</div>
+                <div class="sub">Total de preguntas: <span id="total-preguntas">0</span> · Nivel: <span id="nivel-general">Bajo</span></div>
+                
             </div>
         </div>
 
         <!-- ========== GRÁFICOS DETALLADOS ========== -->
         <div class="chart-container">
             <div class="chart-box">
-                <h3>📊 Nivel de Cumplimiento por Categoría</h3>
-                <div class="bar-chart">
+                <h3>Nivel de cumplimiento por categoría</h3>
+                <div class="bar-chart chart-fallback">
                     <div class="bar-item bar-primary">
-                        <span class="bar-label">🏛️ Políticas Institucionales</span>
+                        <span class="bar-label">Políticas institucionales</span>
                         <div class="bar-track">
                             <div id="barra-detalle-cat1" class="bar-fill" style="width:0%;">0%</div>
                         </div>
                         <span class="bar-percent" id="detalle-porcentaje-cat1">0%</span>
                     </div>
                     <div class="bar-item bar-success">
-                        <span class="bar-label">🔐 Sistema Biométrico</span>
+                        <span class="bar-label">Sistema biométrico</span>
                         <div class="bar-track">
                             <div id="barra-detalle-cat2" class="bar-fill" style="width:0%;">0%</div>
                         </div>
                         <span class="bar-percent" id="detalle-porcentaje-cat2">0%</span>
                     </div>
                     <div class="bar-item bar-warning">
-                        <span class="bar-label">👥 Actores del Sistema</span>
+                        <span class="bar-label">Actores del sistema</span>
                         <div class="bar-track">
                             <div id="barra-detalle-cat3" class="bar-fill" style="width:0%;">0%</div>
                         </div>
@@ -421,20 +411,25 @@ session_start();
             </div>
             
             <div class="chart-box">
-                <h3>📋 Resumen de Métricas</h3>
+                <h3>Distribución de estados</h3>
+                <div class="donut-wrap" aria-label="Distribución de estados de cumplimiento">
+                    <div id="donut-estados" class="donut-chart">
+                        <div class="donut-center"><strong id="donut-total">0</strong><span>respuestas</span></div>
+                    </div>
+                </div>
                 <div class="metrics-grid">
                     <div class="metric-item">
-                        <div class="metric-dot" style="background: #4F46E5;"></div>
+                        <div class="metric-dot" style="background: #16a34a;"></div>
                         <span class="metric-text">Cumple totalmente</span>
                         <span class="metric-count" id="totales-cumple">0</span>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-dot" style="background: #F59E0B;"></div>
+                        <div class="metric-dot" style="background: #d97706;"></div>
                         <span class="metric-text">Cumple parcialmente</span>
                         <span class="metric-count" id="totales-parcial">0</span>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-dot" style="background: #EF4444;"></div>
+                        <div class="metric-dot" style="background: #dc2626;"></div>
                         <span class="metric-text">No cumple</span>
                         <span class="metric-count" id="totales-no-cumple">0</span>
                     </div>
@@ -447,20 +442,62 @@ session_start();
             </div>
         </div>
 
+        <div class="metodologia-nota">
+            <strong>Metodología:</strong> Cumple totalmente = 100% del peso; cumple parcialmente = 50%; no cumple = 0%; “No aplica” se excluye del denominador. El promedio general corresponde al promedio de las categorías aplicables.
+        </div>
+
         <!-- ========== BOTONES ========== -->
         <div class="btn-group" style="justify-content: space-between; margin-top: 24px;">
             <button type="button" class="btn btn-warning" onclick="mostrarTab('tab-recomendaciones')">← Recomendaciones</button>
-            <div style="display: flex; gap: 12px;">
-                <button type="submit" class="btn btn-success" onclick="return confirm('¿Está seguro de guardar la evaluación?')">
-                    💾 Guardar Evaluación
+            <div class="acciones-finales">
+                <button type="submit" class="btn btn-success" onclick="return confirm('¿Desea guardar esta simulación y abrir el dashboard final?')">
+                    Guardar simulación
                 </button>
-                <button type="button" class="btn btn-primary" onclick="generarReporte()">
-                    📄 Generar Reporte
-                </button>
+                <span class="ayuda-accion">El informe PDF se genera desde el dashboard una vez guardados los datos.</span>
             </div>
         </div>
     </div>
 </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 7: ACERCA DEL SIMULADOR -->
+        <!-- ========================================== -->
+        <div id="tab-acerca" class="tab-contenido">
+            <div class="card">
+                <h2>Acerca del simulador</h2>
+                <p class="intro-texto">
+                    Este simulador fue desarrollado como parte de un proyecto de titulación de la carrera de Desarrollo de Software. Su objetivo es apoyar la revisión académica de un sistema de control de acceso biométrico frente a criterios relacionados con protección de datos personales.
+                </p>
+
+                <div class="info-grid">
+                    <section class="info-bloque">
+                        <h3>Base normativa</h3>
+                        <p>La estructura del simulador toma como referencia la Ley Orgánica de Protección de Datos Personales del Ecuador (LOPDP) y su Reglamento General. Las preguntas se concentran en aspectos de consentimiento, transparencia, ejercicio de derechos, seguridad de la información y tratamiento de datos biométricos.</p>
+                    </section>
+                    <section class="info-bloque">
+                        <h3>Qué analiza</h3>
+                        <p>Se revisan tres grupos: políticas institucionales, controles del sistema biométrico y responsabilidades de los actores que utilizan u operan el sistema.</p>
+                    </section>
+                    <section class="info-bloque">
+                        <h3>Cómo calcula el resultado</h3>
+                        <p>Cada requisito tiene una ponderación. “Cumple totalmente” aporta el 100% del peso, “Cumple parcialmente” el 50%, “No cumple” el 0% y “No aplica” se excluye del cálculo. El dashboard presenta resultados por categoría y un promedio general.</p>
+                    </section>
+                    <section class="info-bloque">
+                        <h3>Tecnologías utilizadas</h3>
+                        <p>El sistema está desarrollado con PHP, MySQL, JavaScript, HTML y CSS. Los informes se generan en PDF mediante TCPDF.</p>
+                    </section>
+                </div>
+
+                <div class="aviso-academico">
+                    <strong>Alcance académico:</strong> el resultado es una referencia para análisis y documentación del proyecto. No reemplaza una auditoría jurídica, técnica o de seguridad realizada por profesionales especializados.
+                </div>
+
+                <div class="btn-grupo" style="justify-content: space-between;">
+                    <button type="button" class="btn btn-advertencia" onclick="mostrarTab('tab-dashboard')">← Dashboard</button>
+                    <button type="button" class="btn btn-primario" onclick="mostrarTab('tab-general')">Volver al inicio</button>
+                </div>
+            </div>
+        </div>
     </form>
 </div>
 

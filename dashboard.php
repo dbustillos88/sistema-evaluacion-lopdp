@@ -1,192 +1,231 @@
 <?php
-// =============================================
-// DASHBOARD DE RESULTADOS
-// =============================================
 require_once 'config/conexion.php';
 
-$evaluacion_id = $_GET['id'] ?? 0;
-if (!$evaluacion_id) {
-    header("Location: index.php");
+$evaluacionId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$evaluacionId || $evaluacionId < 1) {
+    header('Location: index.php');
     exit;
 }
 
-$evaluacion = obtenerEvaluacion($evaluacion_id);
-$respuestas = obtenerRespuestas($evaluacion_id);
-$hallazgos = obtenerHallazgos($evaluacion_id);
-$conclusiones = obtenerConclusiones($evaluacion_id);
-$porcentajes = calcularPorcentajes($evaluacion_id);
+$evaluacion = obtenerEvaluacion($evaluacionId);
+if (!$evaluacion) {
+    http_response_code(404);
+    exit('Simulación no encontrada.');
+}
+
+$respuestas = obtenerRespuestas($evaluacionId);
+$hallazgos = obtenerHallazgos($evaluacionId);
+$conclusiones = obtenerConclusiones($evaluacionId) ?? ['conclusiones' => '', 'recomendaciones' => ''];
+$metricas = calcularMetricasDesdeRespuestas($respuestas);
+
+function e(?string $valor): string
+{
+    return htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8');
+}
+
+function porcentaje(float $valor): string
+{
+    return number_format($valor, 2, ',', '.') . '%';
+}
+
+function claseNivel(string $nivel): string
+{
+    if ($nivel === 'Alto') return 'estado-alto';
+    if ($nivel === 'Medio') return 'estado-medio';
+    return 'estado-bajo';
+}
+
+$estados = $metricas['estados'];
+$totalEstados = array_sum($estados);
+$porcCumple = $totalEstados > 0 ? ($estados['Cumple totalmente'] / $totalEstados) * 100 : 0;
+$porcParcial = $totalEstados > 0 ? ($estados['Cumple parcialmente'] / $totalEstados) * 100 : 0;
+$porcNoCumple = $totalEstados > 0 ? ($estados['No cumple'] / $totalEstados) * 100 : 0;
+$p1 = $porcCumple;
+$p2 = $p1 + $porcParcial;
+$p3 = $p2 + $porcNoCumple;
+$donutBackground = $totalEstados > 0
+    ? sprintf(
+        'conic-gradient(#16a34a 0 %.4f%%,#d97706 %.4f%% %.4f%%,#dc2626 %.4f%% %.4f%%,#94a3b8 %.4f%% 100%%)',
+        $p1, $p1, $p2, $p2, $p3, $p3
+    )
+    : '#e2e8f0';
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Evaluación LOPDP</title>
+    <title>Dashboard #<?php echo $evaluacionId; ?> - Simulador LOPDP</title>
     <link rel="stylesheet" href="css/estilos.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>📊 Dashboard de Resultados</h1>
-        <p>Evaluación del sistema biométrico - Carrera de Desarrollo de Software</p>
+        <div class="header-content">
+            <div>
+                <h1>Dashboard de resultados LOPDP</h1>
+                <p class="subtitle">Simulación #<?php echo $evaluacionId; ?> · <?php echo e($evaluacion['nombre_sistema']); ?></p>
+            </div>
+            <span class="estado-badge <?php echo claseNivel($metricas['nivel']); ?>">
+                Nivel de cumplimiento: <?php echo e($metricas['nivel']); ?>
+            </span>
+        </div>
     </div>
 
     <?php if (isset($_GET['success'])): ?>
-        <div style="background:#ECFDF5;padding:16px 20px;border-radius:12px;margin-bottom:20px;border-left:4px solid #10B981;">
-            ✅ Evaluación guardada exitosamente. ID: #<?php echo $evaluacion_id; ?>
-        </div>
+        <div class="mensaje-exito">La simulación se guardó correctamente. Los indicadores fueron calculados nuevamente desde la base de datos.</div>
     <?php endif; ?>
 
-    <!-- INFORMACIÓN GENERAL -->
     <div class="card">
-        <h2>📋 Información de la Evaluación</h2>
+        <h2>Información de la simulación</h2>
         <table class="tabla-resultados">
-            <tr><th>Institución</th><td><?php echo htmlspecialchars($evaluacion['nombre_institucion']); ?></td></tr>
-            <tr><th>RUC</th><td><?php echo htmlspecialchars($evaluacion['ruc'] ?: 'No registrado'); ?></td></tr>
-            <tr><th>Sistema Evaluado</th><td><?php echo htmlspecialchars($evaluacion['nombre_sistema']); ?></td></tr>
-            <tr><th>Fecha</th><td><?php echo date('d/m/Y', strtotime($evaluacion['fecha_evaluacion'])); ?></td></tr>
-            <tr><th>Evaluador</th><td><?php echo htmlspecialchars($evaluacion['evaluador']); ?></td></tr>
+            <tr><th>Institución</th><td><?php echo e($evaluacion['nombre_institucion']); ?></td></tr>
+            <tr><th>RUC / Identificación</th><td><?php echo e($evaluacion['ruc'] ?: 'No registrado'); ?></td></tr>
+            <tr><th>Sistema analizado</th><td><?php echo e($evaluacion['nombre_sistema']); ?></td></tr>
+            <tr><th>Fecha de simulación</th><td><?php echo date('d/m/Y', strtotime($evaluacion['fecha_evaluacion'])); ?></td></tr>
+            <tr><th>Responsable</th><td><?php echo e($evaluacion['evaluador']); ?></td></tr>
         </table>
     </div>
 
-    <!-- RESULTADOS -->
     <div class="dashboard-grid">
-        <div class="dashboard-card">
-            <h3>Categoría 1</h3>
-            <p style="color:#666;font-size:0.9rem;">Políticas Institucionales</p>
-            <div class="numero <?php echo $porcentajes[1] >= 80 ? 'color-verde' : ($porcentajes[1] >= 50 ? 'color-amarillo' : 'color-rojo'); ?>">
-                <?php echo $porcentajes[1]; ?>%
-            </div>
-            <div class="barra-progreso">
-                <div class="barra" style="width:<?php echo $porcentajes[1]; ?>%;"></div>
-            </div>
-        </div>
-        <div class="dashboard-card">
-            <h3>Categoría 2</h3>
-            <p style="color:#666;font-size:0.9rem;">Sistema Biométrico</p>
-            <div class="numero <?php echo $porcentajes[2] >= 80 ? 'color-verde' : ($porcentajes[2] >= 50 ? 'color-amarillo' : 'color-rojo'); ?>">
-                <?php echo $porcentajes[2]; ?>%
-            </div>
-            <div class="barra-progreso">
-                <div class="barra" style="width:<?php echo $porcentajes[2]; ?>%;"></div>
-            </div>
-        </div>
-        <div class="dashboard-card">
-            <h3>Categoría 3</h3>
-            <p style="color:#666;font-size:0.9rem;">Actores del Sistema</p>
-            <div class="numero <?php echo $porcentajes[3] >= 80 ? 'color-verde' : ($porcentajes[3] >= 50 ? 'color-amarillo' : 'color-rojo'); ?>">
-                <?php echo $porcentajes[3]; ?>%
-            </div>
-            <div class="barra-progreso">
-                <div class="barra" style="width:<?php echo $porcentajes[3]; ?>%;"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- HALLAZGOS -->
-    <?php if (!empty($hallazgos)): ?>
-    <div class="card">
-        <h2>🔍 Hallazgos Identificados</h2>
-        <?php foreach ($hallazgos as $h): ?>
-            <div class="hallazgo-item">
-                <div class="hallazgo-categoria">Categoría <?php echo $h['categoria']; ?> - Pregunta <?php echo $h['pregunta_id']; ?></div>
-                <p><?php echo htmlspecialchars($h['descripcion']); ?></p>
+        <?php foreach ($metricas['categorias'] as $cat): ?>
+            <?php
+                $clase = $cat['porcentaje'] >= 80 ? 'color-verde' : ($cat['porcentaje'] >= 50 ? 'color-amarillo' : 'color-rojo');
+                $barraClase = $cat['porcentaje'] >= 80 ? 'barra-verde' : ($cat['porcentaje'] >= 50 ? 'barra-amarillo' : 'barra-rojo');
+            ?>
+            <div class="dashboard-card">
+                <div class="label"><?php echo e($cat['nombre']); ?></div>
+                <div class="value <?php echo $clase; ?>"><?php echo porcentaje($cat['porcentaje']); ?></div>
+                <div class="sub"><?php echo (int) $cat['total']; ?> preguntas · peso aplicable <?php echo number_format($cat['peso_aplicable'], 2, ',', '.'); ?>%</div>
+                <div class="barra-progreso <?php echo $barraClase; ?>">
+                    <div class="barra" style="width:<?php echo max(0, min(100, $cat['porcentaje'])); ?>%"></div>
+                </div>
             </div>
         <?php endforeach; ?>
+
+        <div class="dashboard-card dashboard-card-destacado">
+            <div class="label">Promedio general</div>
+            <div class="value"><?php echo porcentaje($metricas['promedio_general']); ?></div>
+            <div class="sub"><?php echo (int) $metricas['total_preguntas']; ?> preguntas registradas</div>
+        </div>
     </div>
+
+    <div class="chart-container">
+        <div class="chart-box">
+            <h3>Nivel de cumplimiento por categoría</h3>
+            <div class="bar-chart">
+                <?php
+                $barClasses = [1 => 'bar-primary', 2 => 'bar-success', 3 => 'bar-warning'];
+                foreach ($metricas['categorias'] as $id => $cat):
+                    $valor = max(0, min(100, (float) $cat['porcentaje']));
+                ?>
+                    <div class="bar-item <?php echo $barClasses[$id] ?? 'bar-primary'; ?>">
+                        <span class="bar-label"><?php echo e($cat['nombre']); ?></span>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width:<?php echo $valor; ?>%;"><?php echo porcentaje($valor); ?></div>
+                        </div>
+                        <span class="bar-percent"><?php echo porcentaje($valor); ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <h3>Distribución de estados</h3>
+            <div class="donut-wrap">
+                <div class="donut-chart" style="background:<?php echo e($donutBackground); ?>;">
+                    <div class="donut-center"><strong><?php echo $totalEstados; ?></strong><span>respuestas</span></div>
+                </div>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-item"><span class="metric-dot" style="background:#16a34a"></span><span class="metric-text">Cumple totalmente</span><span class="metric-count"><?php echo $estados['Cumple totalmente']; ?></span></div>
+                <div class="metric-item"><span class="metric-dot" style="background:#d97706"></span><span class="metric-text">Cumple parcialmente</span><span class="metric-count"><?php echo $estados['Cumple parcialmente']; ?></span></div>
+                <div class="metric-item"><span class="metric-dot" style="background:#dc2626"></span><span class="metric-text">No cumple</span><span class="metric-count"><?php echo $estados['No cumple']; ?></span></div>
+                <div class="metric-item"><span class="metric-dot" style="background:#94a3b8"></span><span class="metric-text">No aplica</span><span class="metric-count"><?php echo $estados['No aplica']; ?></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="metodologia-nota">
+        <strong>Metodología de cálculo:</strong> “Cumple totalmente” aporta el 100% del peso, “Cumple parcialmente” el 50%, “No cumple” el 0% y “No aplica” se excluye del denominador. El promedio general corresponde al promedio de las categorías con peso aplicable.
+    </div>
+
+    <?php if ($hallazgos): ?>
+        <div class="card" style="margin-top:20px">
+            <h2>Hallazgos identificados</h2>
+            <?php foreach ($hallazgos as $h): ?>
+                <?php $critico = strpos((string) $h['descripcion'], 'No cumple') === 0; ?>
+                <div class="hallazgo-item <?php echo $critico ? 'hallazgo-critico' : ''; ?>">
+                    <div class="hallazgo-categoria">Categoría <?php echo (int) $h['categoria']; ?> · Pregunta <?php echo (int) $h['pregunta_id']; ?></div>
+                    <p><?php echo nl2br(e($h['descripcion'])); ?></p>
+                </div>
+            <?php endforeach; ?>
+        </div>
     <?php endif; ?>
 
-    <!-- CONCLUSIONES -->
-    <?php if ($conclusiones && !empty($conclusiones['conclusiones'])): ?>
-    <div class="card">
-        <h2>📄 Conclusiones</h2>
-        <p><?php echo nl2br(htmlspecialchars($conclusiones['conclusiones'])); ?></p>
-    </div>
-    <?php endif; ?>
+    <div class="resumen-grid">
+        <?php if (trim((string) $conclusiones['conclusiones']) !== ''): ?>
+            <div class="card">
+                <h2>Conclusiones</h2>
+                <p><?php echo nl2br(e($conclusiones['conclusiones'])); ?></p>
+            </div>
+        <?php endif; ?>
 
-    <!-- RECOMENDACIONES -->
-    <?php if ($conclusiones && !empty($conclusiones['recomendaciones'])): ?>
-    <div class="card">
-        <h2>💡 Recomendaciones</h2>
-        <p><?php echo nl2br(htmlspecialchars($conclusiones['recomendaciones'])); ?></p>
+        <?php if (trim((string) $conclusiones['recomendaciones']) !== ''): ?>
+            <div class="card">
+                <h2>Recomendaciones</h2>
+                <p><?php echo nl2br(e($conclusiones['recomendaciones'])); ?></p>
+            </div>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
 
-    <!-- BOTONES -->
-    <div class="btn-grupo" style="margin-top:20px;">
-        <a href="index.php" class="btn btn-primario">⬅ Nueva Evaluación</a>
-        <button onclick="generarPDFDesdeDashboard(<?php echo $evaluacion_id; ?>)" class="btn btn-exito">
-            📄 Generar PDF con Datos
-        </button>
+    <div class="btn-group">
+        <a href="index.php" class="btn btn-outline">Nueva simulación</a>
+        <button id="btn-pdf" type="button" class="btn btn-success" onclick="generarPDF(<?php echo $evaluacionId; ?>)">Generar informe PDF</button>
     </div>
 </div>
 
 <script>
-function generarPDFDesdeDashboard(evaluacionId) {
-    const btn = document.querySelector('.btn-exito');
-    const textoOriginal = btn.textContent;
-    btn.textContent = '⏳ Generando PDF...';
+async function generarPDF(evaluacionId) {
+    const btn = document.getElementById('btn-pdf');
+    const original = btn.textContent;
     btn.disabled = true;
-    
-    // Obtener datos de la página
-    const datos = {
-        evaluacion_id: evaluacionId,
-        institucion: document.querySelector('.tabla-resultados tr:nth-child(1) td')?.textContent || 'No registrado',
-        ruc: document.querySelector('.tabla-resultados tr:nth-child(2) td')?.textContent || 'No registrado',
-        sistema: document.querySelector('.tabla-resultados tr:nth-child(3) td')?.textContent || 'No registrado',
-        fecha: document.querySelector('.tabla-resultados tr:nth-child(4) td')?.textContent || 'No registrado',
-        evaluador: document.querySelector('.tabla-resultados tr:nth-child(5) td')?.textContent || 'No registrado',
-        cat1: document.querySelector('.dashboard-card:nth-child(1) .numero')?.textContent || '0%',
-        cat2: document.querySelector('.dashboard-card:nth-child(2) .numero')?.textContent || '0%',
-        cat3: document.querySelector('.dashboard-card:nth-child(3) .numero')?.textContent || '0%'
-    };
-    
-    // Obtener CONCLUSIONES (solo el texto de conclusiones, no las preguntas)
-    const conclusionesEl = document.querySelector('.card:nth-child(5) p');
-    datos.conclusiones = conclusionesEl ? conclusionesEl.textContent.trim() : '';
-    
-    // Obtener RECOMENDACIONES (solo el texto de recomendaciones, no las preguntas)
-    const recomendacionesEl = document.querySelector('.card:nth-child(6) p');
-    datos.recomendaciones = recomendacionesEl ? recomendacionesEl.textContent.trim() : '';
-    
-    // Obtener HALLAZGOS (solo el texto de hallazgos, no las preguntas)
-    const hallazgosItems = document.querySelectorAll('.hallazgo-item p');
-    datos.hallazgos = Array.from(hallazgosItems).map(el => el.textContent.trim());
-    
-    // Enviar al servidor
-    fetch('generar_reporte_dashboard.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos)
-    })
-    .then(response => {
+    btn.textContent = 'Generando PDF...';
+
+    try {
+        const response = await fetch('generar_reporte.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ evaluacion_id: evaluacionId })
+        });
+
         if (!response.ok) {
-            throw new Error('Error en el servidor: ' + response.status);
+            const mensaje = await response.text();
+            throw new Error(mensaje || `Error HTTP ${response.status}`);
         }
-        return response.blob();
-    })
-    .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'informe_evaluacion_lopdp_' + evaluacionId + '.pdf';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-        
-        btn.textContent = textoOriginal;
+
+        const tipo = response.headers.get('content-type') || '';
+        if (!tipo.includes('application/pdf')) {
+            throw new Error('El servidor no devolvió un archivo PDF.');
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = `informe_simulador_lopdp_${evaluacionId}.pdf`;
+        document.body.appendChild(enlace);
+        enlace.click();
+        enlace.remove();
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error(error);
+        alert('No se pudo generar el informe: ' + error.message);
+    } finally {
         btn.disabled = false;
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('❌ Error al generar el PDF: ' + error.message);
-        btn.textContent = textoOriginal;
-        btn.disabled = false;
-    });
+        btn.textContent = original;
+    }
 }
 </script>
-
 </body>
 </html>
