@@ -104,7 +104,7 @@ function renderCategoria(int $id, array $categoria): void
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador LOPDP - Sistema Biométrico</title>
-    <link rel="stylesheet" href="css/estilos.css?v=20260826-5">
+    <link rel="stylesheet" href="css/estilos.css?v=20260826-6">
 </head>
 <body>
 <div class="app-shell">
@@ -112,9 +112,6 @@ function renderCategoria(int $id, array $categoria): void
         <div class="hero-copy">
             <h1>Simulador de Cumplimiento LOPDP</h1>
             <p>Revisión del sistema biométrico de control de acceso frente a criterios de protección de datos personales.</p>
-        </div>
-        <div class="institution-card">
-            <strong>Instituto Tecnológico Universitario ISMAC</strong>
         </div>
     </header>
 
@@ -532,6 +529,6 @@ function renderCategoria(int $id, array $categoria): void
     </div>
 </div>
 
-<script src="js/funciones.js?v=20260826-5"></script>
+<script src="js/funciones.js?v=20260826-6"></script>
 </body>
 </html>
